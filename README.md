@@ -1,7 +1,7 @@
-# LOGISMART — Generación de dataset sintético (H2-T1)
+# LOGISMART — Dataset sintético y preparación de datos
 
 Proyecto académico de predicción de retrasos en entregas de última milla, organizado con CRISP-DM.
-Este módulo implementa **únicamente la generación y verificación del dataset sintético**.
+Incluye la **generación del dataset sintético** (H2-T1) y su **preparación para modelado** (H2-T4 a H3-T4).
 No entrena modelos ni se conecta a bases de datos productivas.
 
 ## Procedencia y supuestos
@@ -15,7 +15,7 @@ Las comunas, conductores, distancias, congestión, probabilidades, valores falta
 ## Requisitos
 
 - Python 3.10 o superior
-- NumPy y pandas (en `requirements.txt`)
+- Dependencias en `requirements.txt` (NumPy, pandas, scikit-learn y pytest, entre otras)
 
 ## Ejecutar desde la raíz del repositorio
 
@@ -55,13 +55,38 @@ El comando `python main.py` **ya utiliza** 1.050.000 registros y semilla 42. Par
 python main.py --registros 200000 --semilla 123 --salida data/alternativo.csv
 ```
 
+## Preparación de datos (H2-T4 a H3-T4)
+
+Las transformaciones están en `src/pipeline_datos.py`. Los datos de `data/raw/` no se modifican.
+
+```bash
+python -m pytest -q                              # pruebas
+python -m src.pipeline_datos --muestra 20000     # prueba rápida
+python -m src.pipeline_datos                     # dataset completo
+```
+
+Genera en `data/processed/` (local, no se sube a GitHub):
+
+- `logismart_preparado.csv`: datos validados, conductores seudonimizados y variables derivadas (25 columnas).
+- `logismart_modelado.csv`: predictores, `fecha` y `retraso`, sin identificadores (19 columnas).
+
+**Decisiones**
+
+- **Seudonimización:** `id_conductor` se reemplaza por un código estable `COND-xxxx`, sin tabla de correspondencia. Es una medida de protección básica: no garantiza anonimato irreversible (el código puede recalcularse si se conoce el ID original y la clave) ni acredita cumplimiento legal; al ser datos sintéticos, demuestra una práctica de minimización.
+- **Limpieza:** 8 reglas de validación (0 incumplimientos); no se eliminan filas. Los nulos de `experiencia_conductor_anios` (1,51 %) y `peso_kg` (1,01 %) se conservan en los datos preparados. `construir_preprocesador()` define la imputación por mediana (con indicador de nulo); su ajuste se realizará exclusivamente con los datos de entrenamiento durante el modelado, para evitar fuga de información. Un test comprueba que la mediana aprendida proviene solo del conjunto de entrenamiento.
+- **Minimización:** se excluyen `id_entrega`, `id_conductor` y las variables posteriores al despacho (`retraso_salida_min`, `duracion_real_min`, `incidencias`, `estado_final`).
+- **Balanceo:** decisión provisional de no rebalancear, porque la comuna con menos datos (Quintero) tiene 3.341 operaciones. Eso permite analizarla, pero no asegura un buen desempeño en todas las comunas: se verificará el rendimiento por comuna (con su tamaño muestral) durante el modelado y la auditoría de equidad, y solo se evaluará ponderar sobre entrenamiento si se detecta un desempeño claramente peor.
+- **Características:** `es_fin_de_semana`, `es_hora_punta`, `franja_horaria` y `paquetes_por_parada`.
+
 ## Organización
 
 ```text
-main.py                    # Entrada, validación y exportación CSV
-src/generador_dataset.py   # Reglas de generación sintética
-requirements.txt           # Dependencias
-.gitignore                 # Evita versionar datasets grandes
+main.py                       # Entrada, validación y exportación CSV
+src/generador_dataset.py      # Reglas de generación sintética
+src/pipeline_datos.py         # Preparación de datos (seudonimización, limpieza, características)
+tests/test_pipeline_datos.py  # Pruebas del pipeline
+requirements.txt              # Dependencias
+.gitignore                    # Evita versionar datasets grandes
 ```
 
 ## Evidencia para GitHub Projects
