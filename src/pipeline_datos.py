@@ -45,9 +45,9 @@ def seudonimizar_conductores(df: pd.DataFrame, clave: str | None = None) -> pd.D
     No guarda tabla de correspondencia. Es una codificación simple: no impide
     recalcular el código de un ID conocido.
     """
-    clave = (clave or os.environ.get("LOGISMART_CLAVE_SEUDONIMO") or SAL).encode()
+    clave_bytes = (clave or os.environ.get("LOGISMART_CLAVE_SEUDONIMO") or SAL).encode()
     codigos = {
-        i: "COND-" + hmac.new(clave, str(i).encode(), hashlib.sha256).hexdigest()[:12]
+        i: "COND-" + hmac.new(clave_bytes, str(i).encode(), hashlib.sha256).hexdigest()[:12]
         for i in df["id_conductor"].dropna().unique()
     }
     assert len(set(codigos.values())) == len(codigos), "Códigos repetidos entre conductores"

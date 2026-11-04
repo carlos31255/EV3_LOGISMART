@@ -80,12 +80,12 @@ def generar_dataset(n: int = 1_050_000, semilla: int = 42) -> pd.DataFrame:
         'duracion_estimada_min': dur_est,
         'n_paradas': paradas,
     })
-    df['dia_semana'] = df['fecha'].dt.dayofweek
+    df["dia_semana"] = df["fecha"].dt.day_of_week
     df['mes'] = df['fecha'].dt.month
 
     # --- Mecanismo generador del retraso (riesgo latente) ---
     hora_punta = ((df.hora_programada.between(8,9)) | (df.hora_programada.between(17,19))).astype(int)
-    congestion = df.comuna_destino.map(lambda c: comunas[c][2]).values
+    congestion = df['comuna_destino'].map({c: v[2] for c, v in comunas.items()}).to_numpy()
     mes_inv = df['mes'].isin([6,7]).astype(int)     # invierno: más lluvia (el clima NO está disponible como variable)
     hay_lluvia = (rng.random(N) < np.where(mes_inv==1, 0.18, 0.08)).astype(int)
     sal_retraso = np.clip(rng.exponential(4,N) + 8*hay_lluvia*rng.random(N) + 6*hora_punta*rng.random(N), 0, 90).round(0)
