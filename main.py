@@ -61,7 +61,7 @@ def generar(registros: int, semilla: int, salida: Path) -> None:
 
 def ejecutar() -> None:
     ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación, entrenamiento y auditoría")
-    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "equidad", "validacion-negocio", "completo"], default="generar")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "equidad", "validacion-negocio", "automatizar", "completo"], default="generar")
     ap.add_argument("--registros", type=int, default=1_050_000)
     ap.add_argument("--semilla", type=int, default=42)
     ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
@@ -81,6 +81,16 @@ def ejecutar() -> None:
                     help="Ventana operacional objetivo en minutos; opcional")
     ap.add_argument("--capacidad-alertas-dia", type=int, default=None,
                     help="Capacidad diaria supuesta para simular atención de alertas, no un SLA real")
+    ap.add_argument("--entrada-automatizacion", default="data/raw/logismart_entregas_simuladas.csv",
+                    help="CSV histórico sintético de entrada para H6-T1")
+    ap.add_argument("--max-filas-automatizacion", type=int, default=None,
+                    help="Limita filas para prueba local; por defecto procesa todo el CSV")
+    ap.add_argument("--tam-lote-automatizacion", type=int, default=10_000,
+                    help="Filas por bloque de inferencia en H6-T1")
+    ap.add_argument("--carpeta-ejecuciones", default="output/ejecuciones",
+                    help="Directorio de predicciones y bitácoras H6-T1")
+    ap.add_argument("--carpeta-respaldos", default="output/respaldos",
+                    help="Directorio de respaldos ZIP locales H6-T1")
     args = ap.parse_args()
     if args.proceso in ("generar", "completo"):
         generar(args.registros, args.semilla, args.salida)
@@ -93,6 +103,15 @@ def ejecutar() -> None:
     if args.proceso == "optimizar":
         from src.optimizacion import optimizar
         optimizar(max_filas=args.max_filas_opt, iteraciones=args.iteraciones_opt, semilla=args.semilla)
+    if args.proceso == "automatizar":
+        from src.automatizacion import ejecutar_automatizacion
+        ejecutar_automatizacion(
+            entrada=args.entrada_automatizacion,
+            max_filas=args.max_filas_automatizacion,
+            tam_lote=args.tam_lote_automatizacion,
+            carpeta_ejecuciones=args.carpeta_ejecuciones,
+            carpeta_respaldos=args.carpeta_respaldos,
+        )
     if args.proceso == "batch":
         from src.batch import ejecutar_pruebas_batch
         ejecutar_pruebas_batch(
