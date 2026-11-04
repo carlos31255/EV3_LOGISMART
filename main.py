@@ -61,7 +61,7 @@ def generar(registros: int, semilla: int, salida: Path) -> None:
 
 def ejecutar() -> None:
     ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación, entrenamiento y auditoría")
-    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "equidad", "validacion-negocio", "automatizar", "completo"], default="generar")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "equidad", "validacion-negocio", "automatizar", "visualizar", "completo"], default="generar")
     ap.add_argument("--registros", type=int, default=1_050_000)
     ap.add_argument("--semilla", type=int, default=42)
     ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
@@ -91,6 +91,8 @@ def ejecutar() -> None:
                     help="Directorio de predicciones y bitácoras H6-T1")
     ap.add_argument("--carpeta-respaldos", default="output/respaldos",
                     help="Directorio de respaldos ZIP locales H6-T1")
+    ap.add_argument("--registro-visualizacion", default=None,
+                    help="Ruta opcional de registro.json de H6-T1; usa última corrida exitosa por defecto")
     args = ap.parse_args()
     if args.proceso in ("generar", "completo"):
         generar(args.registros, args.semilla, args.salida)
@@ -112,6 +114,10 @@ def ejecutar() -> None:
             carpeta_ejecuciones=args.carpeta_ejecuciones,
             carpeta_respaldos=args.carpeta_respaldos,
         )
+    if args.proceso == "visualizar":
+        from src.visualizacion import generar_visualizacion
+        generar_visualizacion(registro=args.registro_visualizacion,
+                              carpeta_ejecuciones=args.carpeta_ejecuciones)
     if args.proceso == "batch":
         from src.batch import ejecutar_pruebas_batch
         ejecutar_pruebas_batch(
