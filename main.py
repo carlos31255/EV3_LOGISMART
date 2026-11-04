@@ -1,5 +1,7 @@
-"""Entrada de generación, control de calidad y exportación CSV LOGISMART."""
+"""Punto de entrada LOGISMART: generar, preparar, entrenar o ejecutar todo.
 
+Sin argumentos conserva el comportamiento anterior: genera el dataset sintético.
+"""
 import argparse
 from pathlib import Path
 
@@ -13,7 +15,6 @@ COLUMNAS_ESPERADAS = 21
 
 
 def validar(df: pd.DataFrame, n: int) -> None:
-    """Validaciones de estructura, período, integridad y objetivo."""
     if len(df) != n:
         raise ValueError(f"Filas inesperadas: {len(df)} (esperadas: {n})")
     if df.shape[1] != COLUMNAS_ESPERADAS:
@@ -32,41 +33,24 @@ def validar(df: pd.DataFrame, n: int) -> None:
         raise ValueError("Paquetes o paradas fuera de rango")
 
 
-def ejecutar() -> None:
-    parser = argparse.ArgumentParser(description="Genera y valida datos sintéticos LOGISMART")
-    parser.add_argument("--registros", type=int, default=1_050_000,
-                        help="Número de operaciones sintéticas (por defecto: 1050000)")
-    parser.add_argument("--semilla", type=int, default=42,
-                        help="Semilla aleatoria (por defecto: 42)")
-    parser.add_argument("--salida", type=Path,
-                        default=Path("data/raw/logismart_entregas_simuladas.csv"),
-                        help="Ruta del CSV de salida")
-    args = parser.parse_args()
-    if args.registros <= 0:
-        parser.error("--registros debe ser mayor que cero")
-
-    print(f"Generando {args.registros:,} operaciones sintéticas (semilla {args.semilla})...")
-    df = generar_dataset(n=args.registros, semilla=args.semilla)
-    validar(df, args.registros)
-
-    args.salida.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(args.salida, index=False, date_format="%Y-%m-%d")
-
-    # Verificar que la exportación completa puede recuperarse.
-    recuperado = pd.read_csv(args.salida, parse_dates=["fecha"])
-    validar(recuperado, args.registros)
+def generar(registros: int, semilla: int, salida: Path) -> None:
+    if registros <= 0:
+        raise ValueError("--registros debe ser mayor que cero")
+    print(f"Generando {registros:,} operaciones sintéticas (semilla {semilla})...")
+    df = generar_dataset(n=registros, semilla=semilla)
+    validar(df, registros)
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(salida, index=False, date_format="%Y-%m-%d")
+    recuperado = pd.read_csv(salida, parse_dates=["fecha"])
+    validar(recuperado, registros)
     if list(recuperado.columns) != list(df.columns):
         raise ValueError("Orden o nombres de columnas no coinciden tras exportar")
-
     resumen = recuperado.groupby(recuperado["fecha"].dt.to_period("M")).agg(
-        operaciones=("id_entrega", "size"),
-        retrasos=("retraso", "sum"),
-        tasa_retraso=("retraso", "mean"),
+        operaciones=("id_entrega", "size"), retrasos=("retraso", "sum"), tasa_retraso=("retraso", "mean")
     )
     resumen["tasa_retraso_pct"] = (resumen["tasa_retraso"] * 100).round(2)
     nulos = recuperado.isna().sum()
-
-    print(f"\nArchivo: {args.salida.resolve()}")
+    print(f"\nArchivo: {salida.resolve()}")
     print(f"Filas: {len(recuperado):,} | Columnas: {recuperado.shape[1]}")
     print(f"Meses representados: {len(resumen)} de 14")
     print(f"Promedio por mes representado: {len(recuperado) / len(resumen):,.0f} operaciones")
@@ -75,6 +59,26 @@ def ejecutar() -> None:
     print("\nNulos por columna:")
     print(nulos[nulos > 0].to_string() if (nulos > 0).any() else "Ninguno")
     print("\nValidaciones básicas: OK")
+
+
+def ejecutar() -> None:
+    ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación y modelado")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "completo"], default="generar")
+    ap.add_argument("--registros", type=int, default=1_050_000)
+    ap.add_argument("--semilla", type=int, default=42)
+    ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
+                    help="Ruta CSV de generación, conserva la CLI anterior")
+    ap.add_argument("--modo-rapido", action="store_true", help="Limitar train/val/test para una prueba rápida")
+    args = ap.parse_args()
+
+    if args.proceso in ("generar", "completo"):
+        generar(args.registros, args.semilla, args.salida)
+    if args.proceso in ("preparar", "completo"):
+        from src.pipeline_datos import preparar_datos
+        preparar_datos(entrada=args.salida)
+    if args.proceso in ("entrenar", "completo"):
+        from src.modelado import entrenar
+        entrenar(modo_rapido=args.modo_rapido, semilla=args.semilla)
 
 
 if __name__ == "__main__":
