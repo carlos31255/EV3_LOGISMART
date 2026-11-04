@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any
 
 import joblib
 import numpy as np
@@ -76,7 +75,7 @@ def metricas(y, probabilidades, umbral=0.5):
 def elegir_umbral(y_val, prob_val):
     """Elige umbral por F1 de VALIDACIÓN; nunca consulta el conjunto test."""
     candidatos = np.arange(0.10, 0.91, 0.05)
-    f1 = np.array([f1_score(y_val, prob_val >= u, zero_division=0) for u in candidatos])
+    f1 = [f1_score(y_val, prob_val >= u, zero_division=0) for u in candidatos]
     return float(candidatos[int(np.argmax(f1))])
 
 
@@ -109,7 +108,7 @@ def entrenar(
     X_train, y_train = separar_xy(train)
     X_val, y_val = separar_xy(val)
     X_test, y_test = separar_xy(test)
-    modelos: dict[str, Any] = {
+    modelos = {
         "Random Forest": RandomForestClassifier(
             n_estimators=120 if not modo_rapido else 60,
             max_depth=14, min_samples_leaf=8, max_samples=0.40,
@@ -165,7 +164,7 @@ def entrenar(
         "resultado_test": resultado_test,
         "archivo_modelo": str(archivo_modelo),
     }
-    resultados_dir = Path("output/resultados")
+    resultados_dir = Path("output/resultados/modelado")
     resultados_dir.mkdir(parents=True, exist_ok=True)
     archivo_resultados = resultados_dir / "resultados_modelado.json"
     archivo_resultados.write_text(json.dumps(resumen, ensure_ascii=False, indent=2), encoding="utf-8")

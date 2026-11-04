@@ -29,7 +29,7 @@ def agrupar_columnas(preprocesador):
     agrupa los dummies one-hot según su variable original.
     """
     nombres = list(preprocesador.get_feature_names_out())
-    resultado: list[str | None] = [None] * len(nombres)
+    resultado = [None] * len(nombres)
     nums = preprocesador.named_transformers_["num"]
     cats = preprocesador.named_transformers_["cat"]
     num_slice = preprocesador.output_indices_["num"]
@@ -115,9 +115,9 @@ def explicar(
         raise ValueError("--muestra debe ser un entero positivo")
     carpeta = Path(carpeta_modelos)
     ruta_modelo = carpeta / "modelo_logismart.joblib"
-    resultados_dir = Path("output/resultados")
+    resultados_dir = Path("output/resultados/explicabilidad")
     graficos_dir = Path("output/graficos")
-    ruta_resumen = resultados_dir / "resultados_modelado.json"
+    ruta_resumen = Path("output/resultados/modelado/resultados_modelado.json")
     if not ruta_modelo.is_file() or not ruta_resumen.is_file():
         raise FileNotFoundError("Ejecuta primero: python main.py --proceso entrenar")
     resumen = json.loads(ruta_resumen.read_text(encoding="utf-8"))
@@ -208,7 +208,7 @@ def explicar(
     # 1) barras globales
     top = global_importancias.head(15).sort_values()
     fig, ax = plt.subplots(figsize=(9, 6))
-    ax.barh(top.index, top.to_numpy())
+    ax.barh(top.index, top.values)
     ax.set_xlabel("Media de |SHAP| (margen bruto / log-odds)")
     ax.set_title("LOGISMART · Importancia global SHAP (validación)")
     fig.tight_layout()

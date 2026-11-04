@@ -59,7 +59,7 @@ def tabla_comunas(test, probabilidades, umbral, minimo_positivos=30):
 def evaluar(entrada="data/processed/logismart_modelado.csv", carpeta_modelos="models"):
     """Regenera auditoría a partir de pipeline guardado y división temporal fija."""
     carpeta = Path(carpeta_modelos)
-    resultados_dir = Path("output/resultados")
+    resultados_dir = Path("output/resultados/modelado")
     ruta_json = resultados_dir / "resultados_modelado.json"
     ruta_modelo = carpeta / "modelo_logismart.joblib"
     if not ruta_json.exists() or not ruta_modelo.exists():
@@ -89,8 +89,10 @@ def evaluar(entrada="data/processed/logismart_modelado.csv", carpeta_modelos="mo
     comunas = tabla_comunas(test, proba_test, umbral)
     carpeta.mkdir(parents=True, exist_ok=True)
     resultados_dir.mkdir(parents=True, exist_ok=True)
+    dir_comunas = Path("output/resultados/sesgos_equidad")
+    dir_comunas.mkdir(parents=True, exist_ok=True)
     ruta_u = resultados_dir / "auditoria_umbrales_validacion.json"
-    ruta_c = resultados_dir / "auditoria_comunas_test.json"
+    ruta_c = dir_comunas / "auditoria_comunas_test.json"
     ruta_u.write_text(umbrales.to_json(orient="records", indent=2, force_ascii=False), encoding="utf-8")
     ruta_c.write_text(comunas.to_json(orient="records", indent=2, force_ascii=False), encoding="utf-8")
     print("Auditoría LOGISMART (modelo sin reentrenamiento)")
@@ -142,7 +144,7 @@ def comparar_modelos_test(
     from src.pipeline_datos import construir_preprocesador
 
     ruta_modelo = Path(carpeta_modelos) / "modelo_logismart.joblib"
-    ruta_resultados = Path("output/resultados/resultados_modelado.json")
+    ruta_resultados = Path("output/resultados/modelado/resultados_modelado.json")
     if not (ruta_modelo.exists() and ruta_resultados.exists()):
         raise FileNotFoundError("Falta modelo oficial o resultados_modelado.json. Ejecuta primero el entrenamiento completo.")
     oficial = json.loads(ruta_resultados.read_text(encoding="utf-8"))
@@ -205,7 +207,7 @@ def comparar_modelos_test(
         ],
     }
     carpeta = Path(salida)
-    destino = carpeta / "resultados"
+    destino = carpeta / "resultados" / "modelado"
     destino.mkdir(parents=True, exist_ok=True)
     graficos = carpeta / "graficos"
     graficos.mkdir(parents=True, exist_ok=True)

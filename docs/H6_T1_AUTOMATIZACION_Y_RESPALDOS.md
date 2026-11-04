@@ -4,14 +4,14 @@
 
 Implementar **una demostración local** que ejecute en una sola orden las etapas ya desarrolladas de preparación de datos (H3-T4), inferencia en bloques (H5-T2), persistencia de predicciones y respaldo verificable. Se **reutilizan** `src/pipeline_datos.py` y `src/batch.py`; no se duplican transformaciones ni se entrena un modelo nuevo.
 
-La Issue #22 contempla infraestructura **On-Premise / PostgreSQL y respaldo en Amazon S3**. Estas integraciones están **pendientes de confirmación con la docente** y **no están implementadas**. La alternativa local no equivale a cumplimiento de ese aspecto del alcance original. Tampoco se ha configurado una ejecución nocturna automática ni un SLA productivo.
+La infraestructura **PostgreSQL / Amazon S3 no forma parte del alcance definido para la EV3**. La solución acordada utiliza preparación e inferencia locales, persistencia CSV/JSON y respaldo ZIP con verificación. No se ha configurado una ejecución nocturna automática ni un SLA productivo.
 
 ## Requisitos
 
 - Ejecutar desde la raíz del repositorio con el ambiente de `requirements.txt` instalado.
 - Existencia de `data/raw/logismart_entregas_simuladas.csv` (CSV sintético histórico, con la etiqueta `retraso`).
 - Existencia del modelo oficial **propio y de confianza** en `models/modelo_logismart.joblib`.
-- Existencia de `output/resultados/resultados_modelado.json` del entrenamiento completo, con modelo `XGBoost` y umbral oficial fijado en validación.
+- Existencia de `output/resultados/modelado/resultados_modelado.json` del entrenamiento completo, con modelo `XGBoost` y umbral oficial fijado en validación.
 - Espacio en disco disponible para el CSV temporal, las predicciones y el respaldo ZIP; durante el ETL se carga el CSV en memoria.
 
 ## Ejecución
@@ -87,10 +87,10 @@ Los directorios de ejecución y respaldo incluyen `.gitignore` para evitar subir
 ## Límites pendientes de resolver
 
 1. El ETL existente exige la columna `retraso`: funciona como demostración histórica, pero **no procesa todavía entradas futuras sin etiqueta**. Adaptarlo para datos operacionales reales sería una tarea posterior.
-2. Los ZIP son locales y no constituyen respaldos S3 ni replicación On-Premise.
+2. Los ZIP son locales; no constituyen respaldo externo ni replicación fuera del equipo. Esto es una limitación operativa, aunque S3 y PostgreSQL no son requisitos de esta EV3.
 3. No existe planificador nocturno ni registro de reintentos automáticos; la ejecución es manual por CLI.
 4. No hay medición de tiempos/capacidad en infraestructura productiva ni SLA garantizado.
 5. Las predicciones son apoyo para revisión humana, sin decisiones laborales automáticas.
 6. La ausencia de errores durante la ejecución no certifica disponibilidad, continuidad ni trazabilidad de datos reales.
 
-**Estado H6-T1:** prototipo local listo para pruebas, con alcance original de infraestructura sujeto a confirmación con docente. No cerrar la Issue como integración productiva implementada.
+**Estado H6-T1:** flujo local de preparación, inferencia, persistencia y respaldo demostrado con la ejecución completa de 1.050.000 operaciones sintéticas. PostgreSQL y S3 están fuera del alcance acordado para la EV3; no se afirma implantación productiva.

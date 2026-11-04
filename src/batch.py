@@ -176,12 +176,12 @@ def crear_graficos(resumen: pd.DataFrame, carpeta: Path) -> None:
 def ejecutar_pruebas_batch(
     entrada="data/processed/logismart_modelado.csv",
     ruta_modelo="models/modelo_logismart.joblib",
-    ruta_resumen="output/resultados/resultados_modelado.json",
+    ruta_resumen="output/resultados/modelado/resultados_modelado.json",
     volumenes: str | list[int] = "1000,10000,75000,150000",
     tam_lote=10000,
     repeticiones=3,
     ventana_minutos: float | None = None,
-    carpeta_resultados="output/resultados",
+    carpeta_resultados="output/resultados/batch",
     carpeta_graficos="output/graficos",
     salida_ejemplo="output/batch/predicciones_ejemplo.csv",
 ) -> dict:

@@ -99,7 +99,7 @@ def crear_respaldo(predicciones: Path, registro: Path, destino: Path) -> Path:
 def ejecutar_automatizacion(
     entrada: str | Path = "data/raw/logismart_entregas_simuladas.csv",
     ruta_modelo: str | Path = "models/modelo_logismart.joblib",
-    ruta_resumen: str | Path = "output/resultados/resultados_modelado.json",
+    ruta_resumen: str | Path = "output/resultados/modelado/resultados_modelado.json",
     carpeta_ejecuciones: str | Path = "output/ejecuciones",
     carpeta_respaldos: str | Path = "output/respaldos",
     max_filas: int | None = None,

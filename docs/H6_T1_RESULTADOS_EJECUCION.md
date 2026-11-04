@@ -8,6 +8,6 @@ Ejecución: `20261104T170000050763Z_a51e87` (4 de noviembre de 2026, hora regist
 - **Persistencia:** CSV de predicciones, JSON de bitácora y ZIP de respaldo local, según registro de ejecución.
 - **Comprobación externa del CSV:** 1.050.000 filas, sin nulos, orden consecutivo, todas las alertas consistentes con el umbral, SHA-256 coincidente con la bitácora.
 - **Respaldo ZIP:** `verificado: true` según bitácora; ZIP no adjuntado a esta revisión, por lo que no se comprobó independientemente.
-- **Limitaciones:** datos sintéticos y retrospectivos; no producción, no planificador, no validación de capacidad de negocio, no reducción de retrasos acreditada; PostgreSQL y S3 no implementados.
+- **Limitaciones:** datos sintéticos y retrospectivos; no producción, no planificador, no validación de capacidad de negocio, no reducción de retrasos acreditada. PostgreSQL y S3 no se requieren para la EV3.
 
-Este documento registra una **demostración local funcional**, no la implantación de la infraestructura productiva ni el cierre de requisitos sujetos a confirmación docente. Las predicciones CSV completas y los respaldos ZIP quedan en directorios locales ignorados por Git para evitar versionar archivos masivos.
+Este documento registra una **demostración local funcional** dentro del alcance definido para la EV3; no constituye una implantación productiva. Las predicciones CSV completas y los respaldos ZIP quedan en directorios locales ignorados por Git para evitar versionar archivos masivos.

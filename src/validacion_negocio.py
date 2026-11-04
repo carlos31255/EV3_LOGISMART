@@ -149,10 +149,10 @@ def _informe_markdown(reporte: dict, escenarios: pd.DataFrame) -> str:
 
 
 def validar_negocio(
-    ruta_umbrales: str | Path = "output/resultados/auditoria_umbrales_validacion.json",
-    ruta_modelado: str | Path = "output/resultados/resultados_modelado.json",
-    ruta_equidad: str | Path = "output/resultados/equidad_territorial.json",
-    carpeta_resultados: str | Path = "output/resultados",
+    ruta_umbrales: str | Path = "output/resultados/modelado/auditoria_umbrales_validacion.json",
+    ruta_modelado: str | Path = "output/resultados/modelado/resultados_modelado.json",
+    ruta_equidad: str | Path = "output/resultados/sesgos_equidad/equidad_territorial.json",
+    carpeta_resultados: str | Path = "output/resultados/negocio",
     carpeta_graficos: str | Path = "output/graficos",
     capacidad_alertas_dia: int | None = None,
 ) -> dict:

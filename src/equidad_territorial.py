@@ -113,7 +113,7 @@ def calcular_equidad(comunas: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame,
         ["comuna_destino", "recall", "fpr", "revision_recall", "revision_fpr"]]
     informe = {
         "tarea": "H5-T3",
-        "fuente": "output/resultados/auditoria_comunas_test.json (XGBoost oficial H4-T1)",
+        "fuente": "output/resultados/sesgos_equidad/auditoria_comunas_test.json (XGBoost oficial H4-T1)",
         "conjunto": "test sintético, agosto-septiembre 2026; descripción, no ajuste",
         "numero_comunas": int(len(base)),
         "numero_zonas": int(len(zonas)),
@@ -252,9 +252,9 @@ def _reporte_md(informe: dict) -> str:
 
 
 def auditar_equidad(
-    entrada="output/resultados/auditoria_comunas_test.json",
-    oficial="output/resultados/resultados_modelado.json",
-    carpeta_resultados="output/resultados",
+    entrada="output/resultados/sesgos_equidad/auditoria_comunas_test.json",
+    oficial="output/resultados/modelado/resultados_modelado.json",
+    carpeta_resultados="output/resultados/sesgos_equidad",
     carpeta_graficos="output/graficos",
 ) -> dict:
     """Genera tablas, gráficos y reporte desde conteos de H4-T4; no requiere .joblib."""

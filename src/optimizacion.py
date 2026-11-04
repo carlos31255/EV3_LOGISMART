@@ -120,7 +120,7 @@ def _cronometrar_fit(estimador, X, y):
 
 def optimizar(
     entrada="data/processed/logismart_modelado.csv",
-    salida="output/resultados",
+    salida="output/resultados/modelado",
     max_filas=100_000,
     iteraciones=4,
     semilla=42,
@@ -244,7 +244,7 @@ def optimizar(
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="LOGISMART H4-T3: optimización de hiperparámetros")
     ap.add_argument("--entrada", default="data/processed/logismart_modelado.csv")
-    ap.add_argument("--salida", default="output/resultados")
+    ap.add_argument("--salida", default="output/resultados/modelado")
     ap.add_argument("--max-filas", type=int, default=100_000)
     ap.add_argument("--iteraciones", type=int, default=4)
     ap.add_argument("--semilla", type=int, default=42)

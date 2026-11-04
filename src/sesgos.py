@@ -61,12 +61,8 @@ def calcular_diagnostico(comunas: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     correlacion=None
     if len(d)>=3 and d['operaciones'].nunique()>1 and d['recall'].notna().sum()>=3:
         pares = d[["operaciones", "recall"]].dropna()
-        corr: float = pares["operaciones"].corr(
-            pares["recall"],
-            method="spearman"
-        )
+        corr: float = pares["operaciones"].corr(pares["recall"], method="spearman")
         correlacion = corr if np.isfinite(corr) else None
-        
     resultado={
         'origen':'auditoria_comunas_test.json; datos sintéticos; test agosto-septiembre 2026',
         'alcance':'diagnóstico descriptivo H4-T4; NO optimiza umbral ni reentrena; H5-T3 realizará auditoría formal',
@@ -91,8 +87,8 @@ def calcular_diagnostico(comunas: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     return d.sort_values('operaciones',ascending=False),resultado
 
 
-def analizar_sesgos(entrada='output/resultados/auditoria_comunas_test.json',
-                    salida='output/resultados', graficos='output/graficos'):
+def analizar_sesgos(entrada='output/resultados/sesgos_equidad/auditoria_comunas_test.json',
+                    salida='output/resultados/sesgos_equidad', graficos='output/graficos'):
     archivo=Path(entrada)
     if not archivo.exists():
         raise FileNotFoundError(f'Falta {archivo}. Ejecuta primero: python main.py --proceso evaluar')
@@ -128,5 +124,5 @@ def analizar_sesgos(entrada='output/resultados/auditoria_comunas_test.json',
     return tabla,informe
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--entrada',default='output/resultados/auditoria_comunas_test.json')
+    p=argparse.ArgumentParser(); p.add_argument('--entrada',default='output/resultados/sesgos_equidad/auditoria_comunas_test.json')
     a=p.parse_args(); analizar_sesgos(entrada=a.entrada)
