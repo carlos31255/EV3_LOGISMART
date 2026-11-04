@@ -61,7 +61,7 @@ def generar(registros: int, semilla: int, salida: Path) -> None:
 
 def ejecutar() -> None:
     ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación, entrenamiento y auditoría")
-    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "completo"], default="generar")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "completo"], default="generar")
     ap.add_argument("--registros", type=int, default=1_050_000)
     ap.add_argument("--semilla", type=int, default=42)
     ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
@@ -70,6 +70,15 @@ def ejecutar() -> None:
     ap.add_argument("--muestra-shap", type=int, default=500, help="Operaciones de validación usadas para SHAP")
     ap.add_argument("--max-filas-opt", type=int, default=100_000, help="Muestra máxima de entrenamiento para optimización")
     ap.add_argument("--iteraciones-opt", type=int, default=4, help="Configuraciones aleatorias por modelo")
+    ap.add_argument("--entrada-batch", default="data/processed/logismart_modelado.csv",
+                    help="CSV preparado; utiliza solo predictores y nunca la etiqueta retraso")
+    ap.add_argument("--volumenes-batch", default="1000,10000,75000,150000",
+                    help="Volúmenes a medir, separados por coma")
+    ap.add_argument("--tam-lote-batch", type=int, default=10000,
+                    help="Registros por chunk de lectura/inferencia")
+    ap.add_argument("--repeticiones-batch", type=int, default=3)
+    ap.add_argument("--ventana-minutos-batch", type=float, default=None,
+                    help="Ventana operacional objetivo en minutos; opcional")
     args = ap.parse_args()
     if args.proceso in ("generar", "completo"):
         generar(args.registros, args.semilla, args.salida)
@@ -82,6 +91,18 @@ def ejecutar() -> None:
     if args.proceso == "optimizar":
         from src.optimizacion import optimizar
         optimizar(max_filas=args.max_filas_opt, iteraciones=args.iteraciones_opt, semilla=args.semilla)
+    if args.proceso == "batch":
+        from src.batch import ejecutar_pruebas_batch
+        ejecutar_pruebas_batch(
+            entrada=args.entrada_batch,
+            volumenes=args.volumenes_batch,
+            tam_lote=args.tam_lote_batch,
+            repeticiones=args.repeticiones_batch,
+            ventana_minutos=args.ventana_minutos_batch,
+        )
+    if args.proceso == "evaluacion-final":
+        from src.evaluacion import comparar_modelos_test
+        comparar_modelos_test(semilla=args.semilla)
     if args.proceso == "sesgos":
         from src.sesgos import analizar_sesgos
         analizar_sesgos()

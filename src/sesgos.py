@@ -60,8 +60,13 @@ def calcular_diagnostico(comunas: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     brecha=float(validas.max()-validas.min()) if len(validas)>=2 else None
     correlacion=None
     if len(d)>=3 and d['operaciones'].nunique()>1 and d['recall'].notna().sum()>=3:
-        corr=d[['operaciones','recall']].dropna().corr(method='spearman').iloc[0,1]
-        correlacion=float(corr) if np.isfinite(corr) else None
+        pares = d[["operaciones", "recall"]].dropna()
+        corr: float = pares["operaciones"].corr(
+            pares["recall"],
+            method="spearman"
+        )
+        correlacion = corr if np.isfinite(corr) else None
+        
     resultado={
         'origen':'auditoria_comunas_test.json; datos sintéticos; test agosto-septiembre 2026',
         'alcance':'diagnóstico descriptivo H4-T4; NO optimiza umbral ni reentrena; H5-T3 realizará auditoría formal',
