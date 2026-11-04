@@ -1,6 +1,6 @@
 {
   "tarea": "H5-T3",
-  "fuente": "output/resultados/auditoria_comunas_test.json (XGBoost oficial H4-T1)",
+  "fuente": "output/resultados/sesgos_equidad/auditoria_comunas_test.json (XGBoost oficial H4-T1)",
   "conjunto": "test sintético, agosto-septiembre 2026; descripción, no ajuste",
   "numero_comunas": 19,
   "numero_zonas": 2,
