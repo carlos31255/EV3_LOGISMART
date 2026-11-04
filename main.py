@@ -1,12 +1,10 @@
-"""Punto de entrada LOGISMART: generar, preparar, entrenar o ejecutar todo.
+"""LOGISMART: CLI de generación, preparación, entrenamiento y auditoría.
 
-Sin argumentos conserva el comportamiento anterior: genera el dataset sintético.
+Sin argumentos genera el dataset, como la versión anterior.
 """
 import argparse
 from pathlib import Path
-
 import pandas as pd
-
 from src.generador_dataset import generar_dataset
 
 FECHA_INICIO = pd.Timestamp("2025-08-01")
@@ -62,15 +60,14 @@ def generar(registros: int, semilla: int, salida: Path) -> None:
 
 
 def ejecutar() -> None:
-    ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación y modelado")
-    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "completo"], default="generar")
+    ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación, entrenamiento y auditoría")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "completo"], default="generar")
     ap.add_argument("--registros", type=int, default=1_050_000)
     ap.add_argument("--semilla", type=int, default=42)
     ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
                     help="Ruta CSV de generación, conserva la CLI anterior")
-    ap.add_argument("--modo-rapido", action="store_true", help="Limitar train/val/test para una prueba rápida")
+    ap.add_argument("--modo-rapido", action="store_true", help="Limitar entrenamiento para pruebas rápidas")
     args = ap.parse_args()
-
     if args.proceso in ("generar", "completo"):
         generar(args.registros, args.semilla, args.salida)
     if args.proceso in ("preparar", "completo"):
@@ -79,6 +76,9 @@ def ejecutar() -> None:
     if args.proceso in ("entrenar", "completo"):
         from src.modelado import entrenar
         entrenar(modo_rapido=args.modo_rapido, semilla=args.semilla)
+    if args.proceso == "evaluar" or (args.proceso == "completo" and not args.modo_rapido):
+        from src.evaluacion import evaluar
+        evaluar()
 
 
 if __name__ == "__main__":
