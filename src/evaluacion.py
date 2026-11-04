@@ -59,7 +59,8 @@ def tabla_comunas(test, probabilidades, umbral, minimo_positivos=30):
 def evaluar(entrada="data/processed/logismart_modelado.csv", carpeta_modelos="models"):
     """Regenera auditoría a partir de pipeline guardado y división temporal fija."""
     carpeta = Path(carpeta_modelos)
-    ruta_json = carpeta / "resultados_modelado.json"
+    resultados_dir = Path("output/resultados")
+    ruta_json = resultados_dir / "resultados_modelado.json"
     ruta_modelo = carpeta / "modelo_logismart.joblib"
     if not ruta_json.exists() or not ruta_modelo.exists():
         raise FileNotFoundError("Ejecuta primero: python main.py --proceso entrenar")
@@ -87,8 +88,9 @@ def evaluar(entrada="data/processed/logismart_modelado.csv", carpeta_modelos="mo
         np.round(np.arange(0.05, 0.51, 0.05), 2).tolist() + [round(umbral, 4)])))
     comunas = tabla_comunas(test, proba_test, umbral)
     carpeta.mkdir(parents=True, exist_ok=True)
-    ruta_u = carpeta / "auditoria_umbrales_validacion.json"
-    ruta_c = carpeta / "auditoria_comunas_test.json"
+    resultados_dir.mkdir(parents=True, exist_ok=True)
+    ruta_u = resultados_dir / "auditoria_umbrales_validacion.json"
+    ruta_c = resultados_dir / "auditoria_comunas_test.json"
     ruta_u.write_text(umbrales.to_json(orient="records", indent=2, force_ascii=False), encoding="utf-8")
     ruta_c.write_text(comunas.to_json(orient="records", indent=2, force_ascii=False), encoding="utf-8")
     print("Auditoría LOGISMART (modelo sin reentrenamiento)")
