@@ -61,7 +61,7 @@ def generar(registros: int, semilla: int, salida: Path) -> None:
 
 def ejecutar() -> None:
     ap = argparse.ArgumentParser(description="LOGISMART: generación, preparación, entrenamiento y auditoría")
-    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "completo"], default="generar")
+    ap.add_argument("--proceso", choices=["generar", "preparar", "entrenar", "evaluar", "explicar", "optimizar", "sesgos", "evaluacion-final", "batch", "equidad", "completo"], default="generar")
     ap.add_argument("--registros", type=int, default=1_050_000)
     ap.add_argument("--semilla", type=int, default=42)
     ap.add_argument("--salida", type=Path, default=Path("data/raw/logismart_entregas_simuladas.csv"),
@@ -106,6 +106,9 @@ def ejecutar() -> None:
     if args.proceso == "sesgos":
         from src.sesgos import analizar_sesgos
         analizar_sesgos()
+    if args.proceso == "equidad":
+        from src.equidad_territorial import auditar_equidad
+        auditar_equidad()
     if args.proceso == "evaluar" or (args.proceso == "completo" and not args.modo_rapido):
         from src.evaluacion import evaluar
         evaluar()
