@@ -230,7 +230,7 @@ footer {{margin:34px 0;color:#54677e;font-size:13px;}}</style></head><body><main
 <h2>Prioridades y escenarios de atención</h2><div class="gallery">{figuras}</div>
 <h2>Distribución por nivel</h2>{tabla(niveles, {'operaciones':'{:,.0f}', 'porcentaje':'{:.2f}%'})}
 <h2>Escenarios de umbral (solo volumen de alertas)</h2>{tabla(escenarios, {'umbral':'{:.2f}', 'alertas':'{:,.0f}', 'porcentaje_operaciones':'{:.2f}%'})}
-<footer>Base: predicciones batch históricas de H6-T1 (incluye períodos de entrenamiento, validación y test). El conteo de alertas es descriptivo, no una evaluación independiente del modelo. No existen etiquetas en este archivo para calcular precision, recall o retrasos evitados. El umbral oficial no fue modificado. El formato de visualización definitivo está pendiente de confirmación con la docente.</footer>
+<footer>Base: predicciones batch históricas de H6-T1 (incluye períodos de entrenamiento, validación y test). El conteo de alertas es descriptivo, no una evaluación independiente del modelo. No existen etiquetas en este archivo para calcular precision, recall o retrasos evitados. El umbral oficial no fue modificado.</footer>
 </main></body></html>'''
     destino.write_text(doc, encoding='utf-8')
 

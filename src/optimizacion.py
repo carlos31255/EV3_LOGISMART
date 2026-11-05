@@ -22,7 +22,7 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 
-from src.modelado import dividir_temporalmente, separar_xy
+from src.modelado import separar_xy
 from src.pipeline_datos import FECHA, construir_preprocesador
 
 
