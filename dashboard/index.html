@@ -46,11 +46,26 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:20px;co
 .load-status.error{color:#b84331}.load-status.notice{color:#647586}
 @media(max-width:640px){.uploader{align-items:stretch}.upload-info{width:100%}.upload-buttons{width:100%}.btn-upload,.btn-reset{flex:1;text-align:center}}
 @media print{.uploader,.load-status{display:none}}
+
+/* Seguimiento del backlog */
+.seg{margin-top:14px}.seg .panel{min-height:0}
+.segtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:11px 13px}.tile b{display:block;font-size:24px;color:var(--navy);letter-spacing:-.03em;line-height:1.1}.tile span{font-size:11px;color:var(--muted)}
+.tile.warn b{color:#c25f32}.tile.ok b{color:#097b78}
+.phases{display:grid;gap:7px;margin-bottom:14px}.phase{display:grid;grid-template-columns:150px 1fr 54px;gap:10px;align-items:center;font-size:12px}.phase .track{height:12px}.phase .bar{background:var(--teal)}.phase em{font-style:normal;color:var(--muted);text-align:right;font-size:11px}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:9px;font-size:12px;color:var(--muted)}.tools select{font:600 12px Inter,Arial,sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.tasks{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}.tasks th{background:var(--soft);text-align:left;color:var(--muted);font-size:10.5px;letter-spacing:.06em;padding:8px 10px;white-space:nowrap}.tasks td{padding:7px 10px;border-top:1px solid #edf2f5;vertical-align:top}.tasks td.num{text-align:left;white-space:nowrap}.tasks a,.tasks td:first-child{white-space:nowrap}.tasks a{color:#12777b;font-weight:800;text-decoration:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.b-Completado{background:#e0f5ef;color:#0b6f66}.b-En-proceso{background:#fff2d3;color:#7a5a12}
+.segnote{font-size:10.5px;color:#7c8d9a;margin-top:9px}
+@media(max-width:1000px){.segtiles{grid-template-columns:repeat(3,1fr)}.phase{grid-template-columns:110px 1fr 46px}}
+@media print{.tools{display:none}}
 </style></head><body><div class="shell">
 <header><div class="brand"><div class="logo">L</div><div><strong>LOGISMART</strong><small>CIENCIA DE DATOS · EV3</small></div></div><span class="pill">PROTOTIPO · DATOS SINTÉTICOS</span></header>
 <section class="hero"><div><p class="eyebrow">PANEL DE DEMOSTRACIÓN · H6–T2</p><h1>Alertas preventivas de última milla</h1><p class="sub">Vista ejecutiva de la inferencia histórica · XGBoost · revisión humana priorizada</p></div><div class="meta"><b>Corte de evidencia:</b> 04 nov 2026<br>Corrida histórica, no monitoreo en vivo</div></section>
 <section class="uploader" id="uploadZone" aria-label="Cargar resultados desde un archivo JSON">
-  <div class="upload-info"><div class="upload-symbol" aria-hidden="true">⇧</div><div><strong>Actualizar indicadores desde JSON</strong><small>Selecciona <code>output/resultados/visualizacion/h6_t2_indicadores.json</code> · lectura local, sin enviar archivos a Internet</small></div></div>
+  <div class="upload-info"><div class="upload-symbol" aria-hidden="true">⇧</div><div><strong>Cargar JSON: alertas o seguimiento</strong><small><code>h6_t2_indicadores.json</code> actualiza las alertas · <code>seguimiento.json</code> actualiza el backlog · lectura local, sin enviar archivos a Internet</small></div></div>
   <div class="upload-buttons"><label for="jsonInput" class="btn-upload">Cargar archivo JSON<input id="jsonInput" type="file" accept=".json,application/json"></label><button type="button" id="resetDemo" class="btn-reset">Restaurar demostración</button></div>
 </section><p id="loadStatus" class="load-status notice" role="status" aria-live="polite">Vista inicial: resultados históricos H6-T2 · 1.050.000 operaciones sintéticas. Arrastra un archivo JSON aquí o usa «Cargar archivo JSON».</p>
 <section class="kpis" aria-label="Indicadores de la corrida histórica">
@@ -74,14 +89,23 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:20px;co
 <div class="scenario" id="sceneLess"><div class="lab">Menos alertas<small>Umbral 0,20</small></div><div class="track"><span class="bar" style="width:23.76%"></span></div><div class="out">78.166<small>7,44 %</small></div></div>
 </div><div class="scene-note">Un umbral menor genera más casos para revisión. Las cifras representan carga, no exactitud ni retrasos evitados.</div>
 </div></section>
-<section class="bottom"><div class="status"><div><small>TRAZABILIDAD DEL PROYECTO · GITHUB ISSUES</small><strong>23 / 24 tareas cerradas</strong><div class="progress"><span></span></div></div><div class="right"><b>95,8 %</b> de cierre administrativo<br>Abierta: H6-T4 · evaluación final</div></div>
+<section class="seg" id="seguimiento"><div class="panel">
+<div class="panelhead"><h2>Seguimiento del backlog</h2><span id="segSource">—</span></div>
+<div class="segtiles" id="segTiles"></div>
+<div class="phases" id="segPhases"></div>
+<div class="tools"><label for="segFilter">Mostrar:</label><select id="segFilter"><option value="todas">Todas las tareas</option><option value="hechas">Completadas</option><option value="proceso">En proceso</option></select></div>
+<div class="tablewrap"><table class="tasks"><thead><tr><th>ID</th><th>Tarea</th><th>Fase CRISP-DM</th><th>Prio.</th><th>Avance</th><th>Plan (inicio → término)</th><th>Estado</th></tr></thead><tbody id="segBody"></tbody></table></div>
+<p class="segnote" id="segNote"></p>
+</div></section>
+<section class="bottom"><div class="status"><div><small>TRAZABILIDAD DEL PROYECTO · GITHUB PROJECTS</small><strong id="segHeadline">— tareas cerradas</strong><div class="progress"><span id="segBar" style="width:0%"></span></div></div><div class="right"><b id="segPct">—</b> avance promedio<br><span id="segOpen">—</span></div></div>
 <div class="warning"><div class="warn-icon">!</div><p><strong>Interpretación responsable.</strong> Los resultados provienen de datos sintéticos y un proceso retrospectivo. Las alertas no confirman retrasos ni demuestran una reducción real del 20 %.</p></div></section>
-<footer><span>Fuente: <code id="dataFileName">h6_t2_indicadores.json · ejemplo histórico</code> · Datos sintéticos · no es monitoreo en vivo</span><div class="actions"><a href="https://github.com/carlos31255/EV3_LOGISMART/blob/main/output/visualizacion/panel_h6_t2.html" target="_blank" rel="noopener noreferrer">Código del panel H6-T2</a><a href="https://github.com/carlos31255/EV3_LOGISMART/issues" target="_blank" rel="noopener">Ver Issues</a></div></footer>
+<footer><span>Fuente: <code id="dataFileName">h6_t2_indicadores.json · ejemplo histórico</code> · Datos sintéticos · no es monitoreo en vivo</span><div class="actions"><a href="https://github.com/carlos31255/EV3_LOGISMART/tree/main/dashboard" target="_blank" rel="noopener noreferrer">Código del dashboard</a><a href="https://github.com/users/carlos31255/projects/1/views/2" target="_blank" rel="noopener">Tablero del backlog</a></div></footer>
 </div><script>
 "use strict";
 // Datos iniciales verificables del archivo H6-T2 del proyecto. El archivo del usuario
 // se lee únicamente en su navegador: no hay backend ni transmisión de datos.
 const EJEMPLO_H6_T2 = {"tarea":"H6-T2","tipo":"prototipo_visual_local","formato_definitivo":"pendiente_confirmacion_docente","corrida_h6_t1":"20261104T170000050763Z_a51e87","origen":"predicciones históricas sintéticas, incluyen train/val/test; inferencia sin etiquetas","indicadores":{"operaciones":1050000,"alertas":161875,"tasa_alertas":0.15416666666666667,"umbral_oficial":0.15000000000000002,"probabilidad_media":0.08914175711740953,"probabilidad_minima":0.00683802,"probabilidad_maxima":0.88621801,"casos_ambiguos_por_redondeo_en_umbral":0},"niveles_riesgo":[{"nivel":"Bajo","operaciones":720979,"porcentaje":68.66466666666666},{"nivel":"Observación","operaciones":167146,"porcentaje":15.918666666666667},{"nivel":"Prioritario","operaciones":161875,"porcentaje":15.416666666666668}],"escenarios":[{"escenario":"Mayor cobertura","umbral":0.1,"alertas":329021,"porcentaje_operaciones":31.33533333333333},{"escenario":"Umbral oficial","umbral":0.15000000000000002,"alertas":161875,"porcentaje_operaciones":15.416666666666668},{"escenario":"Menos alertas","umbral":0.2,"alertas":78166,"porcentaje_operaciones":7.4443809523809525}],"alcance":"Cantidad de alertas y prioridades, NO métricas de exactitud ni impacto operativo","limitaciones":["Datos sintéticos, no representan operación real en vivo","Las predicciones incluyen períodos de entrenamiento; no interpretar como precisión fuera de muestra","Las probabilidades no están certificadas como calibradas para riesgo real","Las alertas no demuestran que se hayan evitado retrasos","No existe dotación confirmada para atender los casos prioritarios","Formato definitivo de visualización requiere confirmación docente"]};
+/*SEGUIMIENTO_START*/const SEGUIMIENTO_INICIAL = {"tipo": "seguimiento_backlog", "proyecto": "LOGISMART", "fuente": "GitHub Projects · Planificación · Backlog LOGISMART", "fecha_corte": "2026-11-04", "resumen": {"total": 24, "completadas": 23, "en_proceso": 1, "avance_promedio": 98.3}, "tareas": [{"id": "H1-T1", "titulo": "Definir Project Charter, alcance y gobernanza", "issue": 1, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/1", "fase": "Business Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-08-12", "termino": "2026-08-18"}, {"id": "H1-T2", "titulo": "Levantamiento de necesidades con Gerencia de Operaciones", "issue": 2, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/2", "fase": "Business Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-08-12", "termino": "2026-08-21"}, {"id": "H1-T3", "titulo": "Definir KPIs operacionales", "issue": 3, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/3", "fase": "Business Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-08-19", "termino": "2026-08-23"}, {"id": "H1-T4", "titulo": "Priorizar requerimientos mediante MoSCoW", "issue": 4, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/4", "fase": "Business Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-08-21", "termino": "2026-08-25"}, {"id": "H2-T1", "titulo": "Obtención de datos", "issue": 5, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/5", "fase": "Data Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-08-26", "termino": "2026-09-04"}, {"id": "H2-T2", "titulo": "Análisis exploratorio de datos (EDA)", "issue": 6, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/6", "fase": "Data Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-02", "termino": "2026-09-10"}, {"id": "H2-T3", "titulo": "Calidad de datos y sesgos territoriales", "issue": 7, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/7", "fase": "Data Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-06", "termino": "2026-09-13"}, {"id": "H2-T4", "titulo": "Seudonimización de identificadores", "issue": 8, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/8", "fase": "Data Understanding", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-09", "termino": "2026-09-15"}, {"id": "H3-T1", "titulo": "Limpieza e imputación de datos", "issue": 9, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/9", "fase": "Data Preparation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-16", "termino": "2026-09-23"}, {"id": "H3-T2", "titulo": "Anonimización de datos", "issue": 10, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/10", "fase": "Data Preparation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-20", "termino": "2026-09-27"}, {"id": "H3-T3", "titulo": "Rebalanceo de datos por comuna", "issue": 11, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/11", "fase": "Data Preparation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-25", "termino": "2026-10-02"}, {"id": "H3-T4", "titulo": "Ingeniería de características", "issue": 12, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/12", "fase": "Data Preparation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-09-28", "termino": "2026-10-06"}, {"id": "H4-T1", "titulo": "Entrenamiento de modelos predictivos", "issue": 13, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/13", "fase": "Modeling", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-10-07", "termino": "2026-10-18"}, {"id": "H4-T2", "titulo": "Interpretabilidad del modelo mediante SHAP", "issue": 15, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/15", "fase": "Modeling", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-10-14", "termino": "2026-10-23"}, {"id": "H4-T3", "titulo": "Optimización de hiperparámetros", "issue": 16, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/16", "fase": "Modeling", "prioridad": "Should", "estado": "Completado", "avance": 100, "inicio": "2026-10-18", "termino": "2026-10-25"}, {"id": "H4-T4", "titulo": "Análisis de sesgos en predicciones", "issue": 17, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/17", "fase": "Modeling", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-10-21", "termino": "2026-10-27"}, {"id": "H5-T1", "titulo": "Evaluación de métricas del modelo", "issue": 18, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/18", "fase": "Evaluation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-10-28", "termino": "2026-11-03"}, {"id": "H5-T2", "titulo": "Pruebas de ejecución por lotes (Batch)", "issue": 19, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/19", "fase": "Evaluation", "prioridad": "Should", "estado": "Completado", "avance": 100, "inicio": "2026-10-31", "termino": "2026-11-06"}, {"id": "H5-T3", "titulo": "Auditoría de equidad territorial", "issue": 20, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/20", "fase": "Evaluation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-11-04", "termino": "2026-11-08"}, {"id": "H5-T4", "titulo": "Validación de negocio y umbrales de alerta", "issue": 21, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/21", "fase": "Evaluation", "prioridad": "Must", "estado": "Completado", "avance": 100, "inicio": "2026-11-06", "termino": "2026-11-11"}, {"id": "H6-T1", "titulo": "Automatización del pipeline y respaldos", "issue": 22, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/22", "fase": "Deployment", "prioridad": "Should", "estado": "Completado", "avance": 100, "inicio": "2026-11-11", "termino": "2026-11-20"}, {"id": "H6-T2", "titulo": "Visualización de alertas e indicadores", "issue": 23, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/23", "fase": "Deployment", "prioridad": "Should", "estado": "Completado", "avance": 100, "inicio": "2026-11-15", "termino": "2026-11-24"}, {"id": "H6-T3", "titulo": "Elaboración del informe de implementación, monitoreo y control", "issue": 24, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/24", "fase": "Deployment", "prioridad": "Should", "estado": "Completado", "avance": 100, "inicio": "2026-11-22", "termino": "2026-11-28"}, {"id": "H6-T4", "titulo": "Evaluación final y cierre", "issue": 25, "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/25", "fase": "Deployment", "prioridad": "Must", "estado": "En proceso", "avance": 60, "inicio": "2026-11-27", "termino": "2026-12-01"}]};/*SEGUIMIENTO_END*/
 const formatter = new Intl.NumberFormat("es-CL", {maximumFractionDigits: 0});
 const fixed = new Intl.NumberFormat("es-CL", {minimumFractionDigits: 2,maximumFractionDigits: 2});
 const numberText = x => formatter.format(x);
@@ -168,19 +192,83 @@ function render(doc, filename) {
 function status(message, kind="notice") {
   const node=$("loadStatus");node.textContent=message;node.className=`load-status ${kind}`;
 }
+
+// ---------- Seguimiento del backlog ----------
+let segActual = null;
+const ESTADOS_OK = ["Completado","En proceso"];
+const isoDate = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x));
+const fechaCorta = x => { const [y,m,d] = x.split("-"); return `${d}-${m}-${y.slice(2)}`; };
+function validateSeguimiento(doc) {
+  if (!Array.isArray(doc.tareas) || doc.tareas.length === 0) throw Error("El seguimiento debe incluir una lista 'tareas' no vacía.");
+  if (!isoDate(doc.fecha_corte)) throw Error("fecha_corte debe tener formato AAAA-MM-DD.");
+  const ids = new Set();
+  for (const t of doc.tareas) {
+    if (typeof t.id !== "string" || typeof t.titulo !== "string" || ids.has(t.id)) throw Error("Hay tareas sin id/título o con id repetido.");
+    ids.add(t.id);
+    if (!ESTADOS_OK.includes(t.estado)) throw Error(`Estado no reconocido en ${t.id}: use Completado o En proceso.`);
+    if (!finite(t.avance) || t.avance < 0 || t.avance > 100) throw Error(`avance inválido en ${t.id} (0–100).`);
+    if (!isoDate(t.inicio) || !isoDate(t.termino) || t.inicio > t.termino) throw Error(`Fechas planificadas inválidas en ${t.id}.`);
+  }
+  return doc;
+}
+function el(tag, text, cls) { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; }
+function renderSeguimiento(doc, filename) {
+  validateSeguimiento(doc);
+  segActual = doc;
+  const T = doc.tareas, n = T.length, done = T.filter(t => t.estado === "Completado").length;
+  const avg = T.reduce((a,t) => a + t.avance, 0) / n;
+  $("segHeadline").textContent = `${done} / ${n} tareas completadas`;
+  $("segBar").style.width = `${avg}%`;
+  $("segPct").textContent = percentText(avg);
+  const abiertas = T.filter(t => t.estado !== "Completado");
+  $("segOpen").textContent = abiertas.length ? `En proceso: ${abiertas.map(t => t.id).join(", ")}` : "Sin tareas en proceso";
+  $("segSource").textContent = `${filename} · corte ${fechaCorta(doc.fecha_corte)}`;
+  const tiles = $("segTiles"); tiles.replaceChildren();
+  for (const [v,l,k] of [[`${done}/${n}`,"tareas completadas","ok"],[n-done,"en proceso",""],[percentText(avg),"avance promedio","ok"]]) {
+    const d = el("div", null, `tile ${k}`); d.append(el("b", String(v)), el("span", l)); tiles.append(d);
+  }
+  const fases = {}; for (const t of T) { const f = t.fase || "Sin fase"; (fases[f] ||= []).push(t.avance); }
+  const ph = $("segPhases"); ph.replaceChildren();
+  for (const [f,a] of Object.entries(fases)) {
+    const m = a.reduce((x,y)=>x+y,0)/a.length, row = el("div", null, "phase"), tr = el("div", null, "track"), b = el("span", null, "bar");
+    b.style.width = `${m}%`; tr.append(b); row.append(el("span", f), tr, el("em", `${a.length} · ${Math.round(m)} %`)); ph.append(row);
+  }
+  $("segNote").textContent = "Fechas del cronograma planificado (simulado, 16 semanas). Fuente: tablero GitHub Projects.";
+  drawTable();
+}
+function drawTable() {
+  if (!segActual) return;
+  const f = $("segFilter").value, body = $("segBody"); body.replaceChildren();
+  const ok = t => f === "todas" || (f === "hechas" && t.estado === "Completado") || (f === "proceso" && t.estado !== "Completado");
+  for (const t of segActual.tareas.filter(ok)) {
+    const tr = el("tr"), id = el("td"), idText = el(t.url && /^https:\/\//.test(t.url) ? "a" : "span", t.id);
+    if (idText.tagName === "A") { idText.href = t.url; idText.target = "_blank"; idText.rel = "noopener noreferrer"; }
+    id.append(idText);
+    const est = el("td"); est.append(el("span", t.estado, "badge b-" + t.estado.replace(/ /g,"-")));
+    tr.append(id, el("td", t.titulo), el("td", t.fase || "—"), el("td", t.prioridad || "—"), el("td", `${t.avance} %`, "num"),
+      el("td", `${fechaCorta(t.inicio)} → ${fechaCorta(t.termino)}`, "num"), est);
+    body.append(tr);
+  }
+}
+$("segFilter").addEventListener("change", drawTable);
 async function importJSON(file) {
   if (!file) return;
   if (file.size > 5_000_000) {status("El archivo excede el límite de 5 MB. Selecciona un resumen JSON H6-T2.","error");return;}
   try {
     const source=await file.text();const data=JSON.parse(source);
-    render(data,file.name);
-    status(`✓ Indicadores y gráficos actualizados desde ${file.name}. Datos leídos localmente; no se envió ningún archivo.`,"success");
+    if (data && Array.isArray(data.tareas)) {
+      renderSeguimiento(data,file.name);
+      status(`✓ Seguimiento del backlog actualizado desde ${file.name}. Datos leídos localmente; no se envió ningún archivo.`,"success");
+    } else {
+      render(data,file.name);
+      status(`✓ Indicadores y gráficos actualizados desde ${file.name}. Datos leídos localmente; no se envió ningún archivo.`,"success");
+    }
   } catch(err) {
     status(`No se aplicaron cambios: ${err instanceof SyntaxError ? "el archivo no contiene JSON válido." : err.message}`,"error");
   }
 }
 $("jsonInput").addEventListener("change",e=>{const f=e.target.files?.[0];importJSON(f);e.target.value="";});
-$("resetDemo").addEventListener("click",()=>{render(EJEMPLO_H6_T2,"h6_t2_indicadores.json · ejemplo histórico");status("Vista restaurada: resultados históricos verificables del proyecto H6-T2.","notice");});
+$("resetDemo").addEventListener("click",()=>{render(EJEMPLO_H6_T2,"h6_t2_indicadores.json · ejemplo histórico");if(SEGUIMIENTO_INICIAL)renderSeguimiento(SEGUIMIENTO_INICIAL,"seguimiento.json · GitHub Projects");status("Vista restaurada: resultados históricos verificables del proyecto H6-T2.","notice");});
 const zone=$("uploadZone");
 zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("is-dragging");});
 zone.addEventListener("dragleave",()=>zone.classList.remove("is-dragging"));
@@ -188,4 +276,5 @@ zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("is-dr
 // La portada ya trae los valores del JSON original para funcionar incluso sin JS.
 // Reconciliar con el dato integrado al iniciar.
 render(EJEMPLO_H6_T2,"h6_t2_indicadores.json · ejemplo histórico");
+if (SEGUIMIENTO_INICIAL) renderSeguimiento(SEGUIMIENTO_INICIAL,"seguimiento.json · GitHub Projects");
 </script></body></html>

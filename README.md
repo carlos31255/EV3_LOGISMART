@@ -1,106 +1,106 @@
-# LOGISMART — Dataset sintético y preparación de datos
+# LOGISMART — Predicción de retrasos en entregas de última milla
 
-Proyecto académico de predicción de retrasos en entregas de última milla, organizado con CRISP-DM.
-Incluye la **generación del dataset sintético** (H2-T1) y su **preparación para modelado** (H2-T4 a H3-T4).
-No entrena modelos ni se conecta a bases de datos productivas.
+Proyecto académico (Gestión de Proyectos de Datos, SCY1102 · EV3) organizado con CRISP-DM. Genera un dataset sintético de operaciones de reparto, lo prepara, entrena y evalúa modelos de predicción de retraso, audita la equidad territorial, ejecuta inferencia por lotes con respaldo local y entrega un **dashboard simple** que carga archivos JSON para mostrar las alertas y el seguimiento del proyecto.
 
-## Procedencia y supuestos
+Todo el trabajo usa **datos sintéticos**: no hay conexión a datos productivos, PostgreSQL ni AWS.
 
-Según el Caso 3 LOGISMART, la empresa ficticia realiza aproximadamente **75.000 entregas mensuales**, cuenta con cerca de **1.800.000 registros históricos** y presenta un aumento de retrasos desde aproximadamente **8 % a 15 %** en seis meses. Para generar un histórico sintético algo mayor que la mitad del volumen disponible, se simulan **1.050.000 registros de operaciones de reparto**, como volumen sintético de referencia para **14 meses** (promedio aproximado de 75.000 operaciones mensuales). El período se extiende de **agosto de 2025 a septiembre de 2026**. La evolución de retrasos descrita en el caso se reproduce específicamente durante **abril–septiembre de 2026**, mientras que los ocho meses anteriores representan una línea base sintética.
+## Entregable funcional: dashboard
 
-**Importante:** una fila puede contener varios paquetes y paradas; es una **operación de reparto**, no necesariamente un envío individual. La cifra de 75.000 envíos mensuales del caso es referencia de magnitud, no equivalencia directa con el número de filas. Se conserva `id_entrega` por compatibilidad.
+`dashboard/index.html` es una página autocontenida (sin servidor ni librerías externas). Se abre con doble clic o desde GitHub Pages.
 
-Las comunas, conductores, distancias, congestión, probabilidades, valores faltantes y demás distribuciones se simulan con supuestos definidos por el equipo; **no son datos reales ni estadísticas medidas de LOGISMART**. La semilla fija (`42`) permite repetir los resultados con el mismo entorno y parámetros. La selección aleatoria de meses produce volúmenes mensuales cercanos a 75.000, no exactamente idénticos.
+- **Alertas:** botón «Cargar archivo JSON» con `output/resultados/visualizacion/h6_t2_indicadores.json` (lo genera `python main.py --proceso visualizar`). Actualiza indicadores, distribución por prioridad y escenarios de umbral. Un JSON inválido se rechaza con un mensaje y no cambia la pantalla.
+- **Seguimiento del backlog:** el mismo botón acepta `seguimiento.json` (formato con lista `tareas`). Muestra tareas completadas / en proceso, avance por fase CRISP-DM y la tabla de las 24 tareas.
+- Ejemplos para probar la carga en `dashboard/ejemplos/` (el escenario 02 es ficticio, solo demostración).
+- Lectura local en el navegador: ningún archivo se envía a Internet.
 
-## Requisitos
+Limitación: las predicciones exportadas no incluyen ID de entrega, comuna ni fecha, por lo que el dashboard muestra alertas agregadas, no una consola de despacho.
 
-- Python 3.10 o superior
-- Dependencias en `requirements.txt` (NumPy, pandas, scikit-learn y pytest, entre otras)
+## Seguimiento de tareas y backlog
 
-## Ejecutar desde la raíz del repositorio
+El backlog vive en el tablero de GitHub Projects (Planificación · Backlog LOGISMART). Para actualizar el dashboard:
+
+```bash
+gh project item-list 1 --owner carlos31255 --limit 100 --format json > seguimiento/backlog_github.json
+python seguimiento/generar_seguimiento.py
+```
+
+El script genera `dashboard/ejemplos/03_seguimiento_backlog.json` y actualiza los datos incrustados en `dashboard/index.html`. Estado: «Completado» si el tablero lo marca así; cualquier otro estado se muestra como «En proceso». Las fechas son el cronograma planificado (simulado, 16 semanas).
+
+## Ejecución
+
+Requisitos: Python 3.10+ y `requirements.txt`.
 
 ```bash
 python -m venv .venv
-```
-
-En Windows (PowerShell):
-
-```powershell
-.venv\Scripts\Activate.ps1
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python main.py
+python -m pytest -q                # 42 pruebas
 ```
 
-En Linux/macOS:
+Procesos disponibles con `python main.py --proceso <nombre>`:
 
-```bash
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python main.py
-```
+| Proceso | Qué hace |
+|---|---|
+| `generar` (por defecto) | Genera 1.050.000 operaciones sintéticas (semilla 42) en `data/raw/` |
+| `preparar` | Validación, seudonimización y variables derivadas → `data/processed/` |
+| `entrenar` | Entrena Random Forest y XGBoost con partición temporal |
+| `optimizar` | Búsqueda de hiperparámetros (H4-T3) |
+| `explicar` | Explicabilidad SHAP |
+| `sesgos`, `equidad` | Diagnóstico de sesgos y auditoría de equidad territorial |
+| `evaluacion-final`, `evaluar` | Evaluación en test y auditoría de umbrales |
+| `validacion-negocio` | Escenarios de umbral de alerta (0,10 / 0,15 / 0,20) |
+| `batch` | Pruebas de inferencia por lotes (tiempo y memoria) |
+| `automatizar` | Preparación + inferencia por lotes + respaldo ZIP verificable |
+| `visualizar` | Genera los indicadores JSON/CSV/PNG de la última corrida |
+| `completo` | Generar, preparar, entrenar, evaluar y explicar |
 
-Por defecto, guarda `data/raw/logismart_entregas_simuladas.csv` y presenta un resumen mensual de entregas y tasas de retraso, un conteo de nulos y validaciones básicas.
+Prueba rápida: `python main.py --registros 1000 --salida data/prueba.csv`. Los CSV grandes se generan localmente y no se versionan.
 
-### Prueba rápida
+## Resultados principales (datos sintéticos)
 
-```bash
-python main.py --registros 1000 --salida data/prueba.csv
-```
+División temporal: entrenamiento ago 2025–jun 2026 (825.299 filas), validación jul 2026 (74.766) y test ago–sep 2026 (149.935). Selección de modelo y umbral en validación; el test no se usó para elegir.
 
-### Cambiar parámetros (opcional)
+| Modelo (test) | Umbral | ROC-AUC | PR-AUC | Precisión | Recall |
+|---|---|---|---|---|---|
+| Random Forest | 0,10 | 0,7021 | 0,2980 | 25,91 % | 57,53 % |
+| XGBoost (oficial) | 0,15 | 0,7074 | 0,3044 | 34,56 % | 30,95 % |
 
-El comando `python main.py` **ya utiliza** 1.050.000 registros y semilla 42. Para cambiar esos valores de forma explícita:
-
-```bash
-python main.py --registros 200000 --semilla 123 --salida data/alternativo.csv
-```
-
-## Preparación de datos (H2-T4 a H3-T4)
-
-Las transformaciones están en `src/pipeline_datos.py`. Los datos de `data/raw/` no se modifican.
-
-```bash
-python -m pytest -q                              # pruebas
-python -m src.pipeline_datos --muestra 20000     # prueba rápida
-python -m src.pipeline_datos                     # dataset completo
-```
-
-Genera en `data/processed/` (local, no se sube a GitHub):
-
-- `logismart_preparado.csv`: datos validados, conductores seudonimizados y variables derivadas (25 columnas).
-- `logismart_modelado.csv`: predictores, `fecha` y `retraso`, sin identificadores (19 columnas).
-
-**Decisiones**
-
-- **Seudonimización:** `id_conductor` se reemplaza por un código estable `COND-xxxx`, sin tabla de correspondencia. Es una medida de protección básica: no garantiza anonimato irreversible (el código puede recalcularse si se conoce el ID original y la clave) ni acredita cumplimiento legal; al ser datos sintéticos, demuestra una práctica de minimización.
-- **Limpieza:** 8 reglas de validación (0 incumplimientos); no se eliminan filas. Los nulos de `experiencia_conductor_anios` (1,51 %) y `peso_kg` (1,01 %) se conservan en los datos preparados. `construir_preprocesador()` define la imputación por mediana (con indicador de nulo); su ajuste se realizará exclusivamente con los datos de entrenamiento durante el modelado, para evitar fuga de información. Un test comprueba que la mediana aprendida proviene solo del conjunto de entrenamiento.
-- **Minimización:** se excluyen `id_entrega`, `id_conductor` y las variables posteriores al despacho (`retraso_salida_min`, `duracion_real_min`, `incidencias`, `estado_final`).
-- **Balanceo:** decisión provisional de no rebalancear, porque la comuna con menos datos (Quintero) tiene 3.341 operaciones. Eso permite analizarla, pero no asegura un buen desempeño en todas las comunas: se verificará el rendimiento por comuna (con su tamaño muestral) durante el modelado y la auditoría de equidad, y solo se evaluará ponderar sobre entrenamiento si se detecta un desempeño claramente peor.
-- **Características:** `es_fin_de_semana`, `es_hora_punta`, `franja_horaria` y `paquetes_por_parada`.
+La discriminación es limitada. En la corrida H6-T1 se procesaron 1.050.000 operaciones y se emitieron 161.875 alertas (15,42 %) en 19,89 s. Las alertas son prioridades de revisión humana: no demuestran retrasos evitados ni la meta de reducir 20 % los retrasos.
 
 ## Organización
 
 ```text
-main.py                       # Entrada, validación y exportación CSV
-src/generador_dataset.py      # Reglas de generación sintética
-src/pipeline_datos.py         # Preparación de datos (seudonimización, limpieza, características)
-tests/test_pipeline_datos.py  # Pruebas del pipeline
-requirements.txt              # Dependencias
-.gitignore                    # Evita versionar datasets grandes
+main.py                  # Punto de entrada (--proceso)
+src/                     # Generador, pipeline, modelado, explicabilidad, equidad, batch, automatización, visualización
+tests/                   # Pruebas con pytest
+notebooks/               # 01 EDA · 02 Modelado y evidencias H4–H6
+dashboard/               # Dashboard HTML y ejemplos JSON
+seguimiento/             # Export del backlog y generador de seguimiento.json
+docs/                    # Documentación H6-T1 y H6-T2
+output/                  # Resultados, gráficos, ejecuciones y respaldos
+models/                  # Modelo oficial (.joblib)
 ```
 
-## Evidencia para GitHub Projects
+CI en `.github/workflows/`: `tests.yml` (pytest) y `dashboard-pages.yml` (publica `dashboard/` en GitHub Pages).
 
-Issue **H2-T1 — Obtención de datos**: registrar el commit de este código, la salida de consola (filas, columnas, resumen mensual, validaciones OK) y, si hace falta, una muestra pequeña del CSV. El CSV completo se genera localmente y no se incluye en Git por defecto.
+## Procedencia y supuestos del dataset
+
+Según el Caso 3, LogiSmart realiza ~75.000 entregas mensuales, tiene ~1.800.000 registros históricos y los retrasos subieron de ~8 % a ~15 % en seis meses. Se simulan **1.050.000 operaciones de reparto** entre agosto de 2025 y septiembre de 2026; la tendencia del caso se reproduce en abril–septiembre de 2026 y los meses previos son una línea base sintética (supuesto del generador). Una fila es una operación de reparto, que puede incluir varios paquetes y paradas. Comunas, conductores, distancias, faltantes y demás distribuciones son supuestos del equipo, no estadísticas medidas de LOGISMART.
+
+## Preparación de datos
+
+`src/pipeline_datos.py` no modifica `data/raw/`.
+
+- **Seudonimización:** `id_conductor` → código `COND-xxxx` sin tabla de correspondencia. Es una medida básica de minimización, no garantiza anonimato irreversible.
+- **Limpieza:** 8 reglas de validación (0 incumplimientos); no se eliminan filas. Los nulos de experiencia del conductor (1,51 %) y peso (1,01 %) se imputan por mediana ajustada solo con entrenamiento, para evitar fuga de información.
+- **Minimización:** se excluyen identificadores y variables posteriores al despacho (`retraso_salida_min`, `duracion_real_min`, `incidencias`, `estado_final`).
+- **Balanceo:** no se rebalanceó el modelo oficial; el rendimiento por comuna se audita en la equidad territorial.
 
 ## Limitaciones
 
-El generador modela distancias y asignaciones mediante distribuciones supuestas; no representa rutas geográficas reales. Algunas variables como duración real e incidencias son posteriores a la operación y **no deben utilizarse como predictoras antes del despacho**. El hecho de que el dataset reproduzca aproximadamente la tendencia del caso no valida un modelo predictivo.
+- Datos sintéticos: los resultados no son evidencia de desempeño real.
+- Sin integración con PostgreSQL ni S3; el respaldo es un ZIP local, no una copia externa.
+- Las probabilidades no están calibradas como riesgo real y no hay dotación confirmada para atender las alertas.
+- El modelo no debe usarse como sanción automática ni evaluación laboral de conductores.
 
-## Nota metodológica
-
-El histórico de 14 meses es una **muestra sintética ampliada** respecto de los 1.800.000 registros mencionados por el caso; no corresponde a una extracción real de PostgreSQL. Los 8 meses previos a abril de 2026 usan una tasa de riesgo base aproximada, como **supuesto del generador**, no como antecedente explícito del caso. Al aumentar el número de filas se requiere más RAM y espacio en disco; para un ensayo rápido usar `--registros 1000`.
-
-## Selección de variables y modelado
-
-Consultar [`DICCIONARIO_Y_MODELADO.md`](DICCIONARIO_Y_MODELADO.md) para conocer la unidad de análisis, las columnas disponibles antes del despacho, las columnas prohibidas para predicción preventiva y la partición temporal sugerida. **El generador no implementa aún el modelo.**
+Más detalle en `docs/H6_T1_AUTOMATIZACION_Y_RESPALDOS.md`, `docs/H6_T1_RESULTADOS_EJECUCION.md` y `docs/H6_T2_VISUALIZACION.md`.
