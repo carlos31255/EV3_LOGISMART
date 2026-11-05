@@ -2,7 +2,9 @@
 
 ## Alcance del entregable
 
-Se implementó un **prototipo local de visualización** mediante HTML autocontenido, generado desde Python. No es un dashboard conectado en tiempo real ni presupone que Power BI, Streamlit u otra herramienta sea el entregable final. La **confirmación del formato definitivo con la docente sigue pendiente** según la Issue #23.
+Se implementó un **prototipo local de visualización** mediante HTML autocontenido, generado desde Python. No es un dashboard conectado en tiempo real.
+
+El entregable funcional principal es el **dashboard simple** en `dashboard/index.html`, que permite cargar un JSON para mostrar las alertas y el seguimiento del backlog (ver `dashboard/ejemplos/`). Este panel estático complementa al dashboard con los indicadores de la corrida H6-T1.
 
 No reentrena modelos, no ajusta el umbral oficial ni reutiliza la etiqueta `retraso` en la visualización. Consume únicamente `registro.json` y `predicciones.csv` de una corrida exitosa de H6-T1.
 
@@ -66,7 +68,6 @@ El script comprueba estado completado en la bitácora, columnas requeridas, orde
 - El archivo de predicciones no incluye etiqueta real ni comuna/fecha; por ello no se muestran métricas por comuna, fechas, tasas reales de retraso ni falsos positivos por área. Esas métricas deben mantenerse en la auditoría H5-T3, **identificando que proceden de otro subconjunto**.
 - No se acreditan un SLA, la capacidad diaria de atención, retrasos evitados ni impacto operacional del 20 %.
 - El uso recomendado de alertas sigue siendo apoyo a decisiones humanas, sin sanciones automáticas a conductores.
-- La confirmación de formato con la docente es requisito pendiente de la Issue H6-T2; los indicadores y el prototipo no suponen ese acuerdo.
 
 ## Resultado de la corrida de referencia (4 de noviembre de 2026)
 
