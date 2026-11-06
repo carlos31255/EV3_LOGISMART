@@ -1,7 +1,7 @@
 {
   "tarea": "H6-T2",
   "tipo": "prototipo_visual_local",
-  "formato_definitivo": "pendiente_confirmacion_docente",
+  "formato_definitivo": "dashboard_html_autocontenido",
   "corrida_h6_t1": "20261104T170000050763Z_a51e87",
   "origen": "predicciones históricas sintéticas, incluyen train/val/test; inferencia sin etiquetas",
   "indicadores": {
@@ -58,6 +58,6 @@
     "Las probabilidades no están certificadas como calibradas para riesgo real",
     "Las alertas no demuestran que se hayan evitado retrasos",
     "No existe dotación confirmada para atender los casos prioritarios",
-    "Formato definitivo de visualización requiere confirmación docente"
+    "El entregable funcional es el dashboard HTML (dashboard/index.html)"
   ]
 }

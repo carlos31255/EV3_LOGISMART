@@ -273,7 +273,7 @@ def generar_visualizacion(
     hist.to_csv(resultados/'h6_t2_histograma.csv', index=False)
     indicadores = {
         'tarea':'H6-T2', 'tipo':'prototipo_visual_local',
-        'formato_definitivo':'pendiente_confirmacion_docente',
+        'formato_definitivo':'dashboard_html_autocontenido',
         'corrida_h6_t1':bitacora['identificador_ejecucion'],
         'origen':'predicciones históricas sintéticas, incluyen train/val/test; inferencia sin etiquetas',
         'indicadores':ind,
@@ -286,7 +286,7 @@ def generar_visualizacion(
             'Las probabilidades no están certificadas como calibradas para riesgo real',
             'Las alertas no demuestran que se hayan evitado retrasos',
             'No existe dotación confirmada para atender los casos prioritarios',
-            'Formato definitivo de visualización requiere confirmación docente',
+            'El entregable funcional es el dashboard HTML (dashboard/index.html)',
         ],
     }
     (resultados/'h6_t2_indicadores.json').write_text(json.dumps(indicadores,ensure_ascii=False,indent=2),encoding='utf-8')

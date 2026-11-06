@@ -1,7 +1,7 @@
 {
   "tarea": "H6-T2",
   "tipo": "escenario_hipotetico_exclusivo_para_demostracion",
-  "formato_definitivo": "pendiente_confirmacion_docente",
+  "formato_definitivo": "dashboard_html_autocontenido",
   "corrida_h6_t1": "NO_APLICA_ESCENARIO_FICTICIO",
   "origen": "ESCENARIO HIPOTÉTICO PARA DEMOSTRACIÓN: cifras inventadas y coherentes para probar la interfaz; no corresponde a ninguna corrida del pipeline ni a resultados observados.",
   "indicadores": {
