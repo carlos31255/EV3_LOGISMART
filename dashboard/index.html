@@ -63,7 +63,7 @@ table.tasks{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}.
 @media print{.tools{display:none}}
 </style></head><body><div class="shell">
 <header><div class="brand"><div class="logo">L</div><div><strong>LOGISMART</strong><small>CIENCIA DE DATOS · EV3</small></div></div><span class="pill">DATOS SINTÉTICOS</span></header>
-<section class="hero"><div><p class="eyebrow">PANEL DE DEMOSTRACIÓN · H6–T2</p><h1>Alertas preventivas de última milla</h1><p class="sub">Vista ejecutiva de la inferencia histórica · XGBoost · revisión humana priorizada</p></div><div class="meta"><b>Corte de evidencia:</b> 04 nov 2026<br>Corrida histórica, no monitoreo en vivo</div></section>
+<section class="hero"><div><p class="eyebrow">PANEL DE DEMOSTRACIÓN · H6–T2</p><h1>Alertas preventivas de última milla</h1><p class="sub">Vista ejecutiva de la inferencia histórica · XGBoost · revisión humana priorizada</p></div><div class="meta">Corrida histórica, no monitoreo en vivo</div></section>
 <section class="uploader" id="uploadZone" aria-label="Cargar resultados desde un archivo JSON">
   <div class="upload-info"><div class="upload-symbol" aria-hidden="true">⇧</div><div><strong>Cargar JSON: alertas o seguimiento</strong><small><code>h6_t2_indicadores.json</code> actualiza las alertas · <code>seguimiento.json</code> actualiza el backlog · lectura local, sin enviar archivos a Internet</small></div></div>
   <div class="upload-buttons"><label for="jsonInput" class="btn-upload">Cargar archivo JSON<input id="jsonInput" type="file" accept=".json,application/json"></label><button type="button" id="resetDemo" class="btn-reset">Restaurar demostración</button></div>
@@ -223,7 +223,7 @@ function renderSeguimiento(doc, filename) {
   const abiertas = T.filter(t => t.estado !== "Completado");
   const detalle = t => `${t.id} ${t.titulo} (${t.avance} %${t.termino ? ", término " + fechaCorta(t.termino) : ""})`;
   $("segOpen").textContent = `Avance promedio declarado: ${percentText(avg)} · ` + (abiertas.length ? `Pendiente: ${abiertas.map(detalle).join("; ")}` : "Sin tareas pendientes");
-  $("segSource").textContent = `${filename} · corte ${fechaCorta(doc.fecha_corte)}`;
+  $("segSource").textContent = filename;
   const tiles = $("segTiles"); tiles.replaceChildren();
   for (const [v,l,k] of [[`${done}/${n}`,"tareas completadas","ok"],[percentText(pctDone),"tareas terminadas (completadas ÷ total)","ok"],[percentText(avg),"avance promedio declarado (promedio del % de cada tarea)",""],[n-done,"en proceso","warn"]]) {
     const d = el("div", null, `tile ${k}`); d.append(el("b", String(v)), el("span", l)); tiles.append(d);
