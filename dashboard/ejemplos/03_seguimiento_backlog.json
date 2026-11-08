@@ -132,7 +132,7 @@
     },
     {
       "id": "H3-T3",
-      "titulo": "Rebalanceo de datos por comuna",
+      "titulo": "Evaluación del rebalanceo territorial",
       "issue": 11,
       "url": "https://github.com/carlos31255/EV3_LOGISMART/issues/11",
       "fase": "Data Preparation",

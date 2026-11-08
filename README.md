@@ -17,7 +17,7 @@ Limitación: las predicciones exportadas no incluyen ID de entrega, comuna ni fe
 
 ## Seguimiento de tareas y backlog
 
-El backlog vive en el tablero de GitHub Projects (Planificación · Backlog LOGISMART). Para actualizar el dashboard:
+El backlog vive en el tablero de GitHub Projects (Planificación · Backlog LOGISMART). Para actualizar el dashboard necesitas GitHub CLI (`gh`) con sesión iniciada y permiso de proyectos (`gh auth refresh -s project`):
 
 ```bash
 gh project item-list 1 --owner carlos31255 --limit 100 --format json > seguimiento/backlog_github.json
@@ -26,16 +26,109 @@ python seguimiento/generar_seguimiento.py
 
 El script genera `dashboard/ejemplos/03_seguimiento_backlog.json` y actualiza los datos incrustados en `dashboard/index.html`. Estado: «Completado» si el tablero lo marca así; cualquier otro estado se muestra como «En proceso». Las fechas son el cronograma planificado (simulado, 16 semanas).
 
-## Ejecución
+## Reproducción desde cero
 
-Requisitos: Python 3.10+ y `requirements.txt`.
+El repositorio no incluye los CSV ni el modelo entrenado (`models/*.joblib`): se generan con los pasos siguientes. El dashboard sí viene listo en `dashboard/index.html` con datos de ejemplo incrustados, así que los pasos 2 a 4 solo son necesarios para regenerar las alertas desde el pipeline.
+
+### Prerrequisitos
+
+- Python 3.10 o superior y `pip` (entorno de referencia: Python 3.12, NumPy 2.3, pandas 2.2, scikit-learn 1.8, XGBoost 3.4).
+- `git` para clonar el repositorio.
+- Espacio libre en disco: se generan 1.050.000 filas y los CSV pesan cientos de MB.
+- Un navegador actual para abrir el dashboard.
+- Opcional: [GitHub CLI](https://cli.github.com/) (`gh`) con sesión iniciada y permiso de proyectos (`gh auth refresh -s project`), solo para actualizar el seguimiento del backlog.
+- No requiere GPU, base de datos ni cuentas en la nube.
+
+### 1. Clonar, instalar y probar
 
 ```bash
+git clone https://github.com/carlos31255/EV3_LOGISMART.git
+cd EV3_LOGISMART
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pytest -q                # 42 pruebas
 ```
+
+### 2. Generar datos y entrenar el modelo
+
+```bash
+python main.py --proceso completo  # generar, preparar, entrenar, evaluar y explicar
+```
+
+Produce `data/raw/`, `data/processed/`, el modelo oficial `models/modelo_logismart.joblib` y `output/resultados/modelado/resultados_modelado.json`. Es el atajo de los cinco primeros comandos de «Ejecución uno a uno».
+
+Para llegar solo al dashboard no hacen falta `evaluar` ni `explicar`. Basta con:
+
+```bash
+python main.py --proceso generar
+python main.py --proceso preparar
+python main.py --proceso entrenar
+```
+
+### 3. Inferencia por lotes y respaldo
+
+```bash
+python main.py --proceso automatizar
+```
+
+Guarda `predicciones.csv` y `registro.json` en `output/ejecuciones/<id_de_corrida>/` y el respaldo ZIP en `output/respaldos/`. Requiere el modelo y `resultados_modelado.json` del paso 2, y que el modelo elegido sea XGBoost entrenado sin `--modo-rapido`. Ejecuta su propia preparación en una carpeta temporal, por lo que no depende de `data/processed/`.
+
+Cada ejecución crea una carpeta con un identificador nuevo (fecha, hora y sufijo aleatorio), por lo que su nombre no coincidirá con el citado en el notebook. Para verificar la reproducción compara el número de alertas (161.875 de 1.050.000 operaciones) y el SHA-256 de `predicciones.csv` (campo `sha256_predicciones` de `registro.json`), no el nombre de la carpeta.
+
+### 4. Indicadores del dashboard
+
+```bash
+python main.py --proceso visualizar
+```
+
+Lee la última corrida y genera `output/resultados/visualizacion/h6_t2_indicadores.json` (más CSV y PNG) y el panel `output/visualizacion/panel_h6_t2.html`. Falla si antes no se ejecutó el paso 3.
+
+### 5. Abrir el dashboard
+
+Abre `dashboard/index.html` con doble clic, pulsa «Cargar archivo JSON» y selecciona `output/resultados/visualizacion/h6_t2_indicadores.json`. Para el seguimiento del backlog, carga `seguimiento.json` (ver la sección anterior).
+
+### Ejecución uno a uno (todas las evidencias)
+
+`completo` equivale a los cinco primeros comandos de la lista. Para reproducir además todas las evidencias del notebook `notebooks/02_Modelado_LogiSmart.ipynb` (que solo lee resultados ya generados), ejecuta los procesos en este orden, que respeta las dependencias del código y sigue el del backlog (H4-T3 a H6-T2):
+
+```bash
+python main.py --proceso generar
+python main.py --proceso preparar
+python main.py --proceso entrenar
+python main.py --proceso evaluar              # antes de sesgos, equidad y validacion-negocio
+python main.py --proceso explicar             # SHAP
+python main.py --proceso optimizar            # H4-T3
+python main.py --proceso sesgos               # H4-T4
+python main.py --proceso evaluacion-final     # H5-T1
+python main.py --proceso batch                # H5-T2
+python main.py --proceso equidad              # H5-T3
+python main.py --proceso validacion-negocio   # H5-T4 (después de evaluar y equidad)
+python main.py --proceso automatizar          # H6-T1
+python main.py --proceso visualizar           # H6-T2 (después de automatizar)
+```
+
+Qué necesita cada proceso antes de ejecutarse:
+
+| Proceso | Requiere |
+|---|---|
+| `preparar` | `generar` |
+| `entrenar`, `optimizar` | `preparar` (`optimizar` no modifica el modelo oficial) |
+| `evaluar`, `explicar`, `evaluacion-final`, `batch` | `entrenar` |
+| `sesgos` | `evaluar` |
+| `equidad` | `evaluar` |
+| `validacion-negocio` | `evaluar` y `equidad` |
+| `automatizar` | `generar` y `entrenar` |
+| `visualizar` | `automatizar` |
+
+No uses `--modo-rapido` para reproducir resultados: limita el entrenamiento y omite `evaluar` y `explicar` en `completo`; además, `automatizar`, `batch`, `evaluar`, `explicar` y `evaluacion-final` rechazan un modelo entrenado en ese modo. Tampoco cambies `--registros` si quieres obtener las cifras del informe.
+
+### Reproducibilidad
+
+El generador usa la semilla 42. Con otras versiones de las librerías, las cifras pueden diferir levemente de las reportadas aquí (por ejemplo, una referencia reentrenada produjo 20.070 alertas frente a 20.581 de la ejecución histórica). Compara siempre entre ejecuciones del mismo entorno.
+
+## Ejecución
 
 Procesos disponibles con `python main.py --proceso <nombre>`:
 
