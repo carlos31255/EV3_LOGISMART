@@ -1,6 +1,9 @@
 """LOGISMART: CLI de generación, preparación, entrenamiento y auditoría.
 
 Sin argumentos genera el dataset, como la versión anterior.
+El proceso completo ejecuta generación, preparación, entrenamiento, evaluación,
+SHAP, automatización con respaldo y visualización, en ese orden.
+En modo rápido, completo solo genera, prepara y entrena.
 """
 import argparse
 from pathlib import Path
@@ -81,8 +84,8 @@ def ejecutar() -> None:
                     help="Ventana operacional objetivo en minutos; opcional")
     ap.add_argument("--capacidad-alertas-dia", type=int, default=None,
                     help="Capacidad diaria supuesta para simular atención de alertas, no un SLA real")
-    ap.add_argument("--entrada-automatizacion", default="data/raw/logismart_entregas_simuladas.csv",
-                    help="CSV histórico sintético de entrada para H6-T1")
+    ap.add_argument("--entrada-automatizacion", default=None,
+                    help="CSV de H6-T1; por defecto usa --salida en completo o el CSV original en automatizar")
     ap.add_argument("--max-filas-automatizacion", type=int, default=None,
                     help="Limita filas para prueba local; por defecto procesa todo el CSV")
     ap.add_argument("--tam-lote-automatizacion", type=int, default=10_000,
@@ -102,22 +105,48 @@ def ejecutar() -> None:
     if args.proceso in ("entrenar", "completo"):
         from src.modelado import entrenar
         entrenar(modo_rapido=args.modo_rapido, semilla=args.semilla)
-    if args.proceso == "optimizar":
-        from src.optimizacion import optimizar
-        optimizar(max_filas=args.max_filas_opt, iteraciones=args.iteraciones_opt, semilla=args.semilla)
-    if args.proceso == "automatizar":
+    if args.proceso == "evaluar" or (args.proceso == "completo" and not args.modo_rapido):
+        from src.evaluacion import evaluar
+        evaluar()
+    if args.proceso == "explicar" or (args.proceso == "completo" and not args.modo_rapido):
+        from src.explicabilidad import explicar
+        explicar(muestra=args.muestra_shap, semilla=args.semilla)
+
+    # Las etapas operativas requieren el modelo oficial y las métricas previas.
+    registro_visualizacion = args.registro_visualizacion
+    if args.proceso == "automatizar" or (args.proceso == "completo" and not args.modo_rapido):
         from src.automatizacion import ejecutar_automatizacion
-        ejecutar_automatizacion(
-            entrada=args.entrada_automatizacion,
+        entrada_automatizacion = args.entrada_automatizacion
+        if entrada_automatizacion is None:
+            entrada_automatizacion = (
+                args.salida if args.proceso == "completo"
+                else Path("data/raw/logismart_entregas_simuladas.csv")
+            )
+        registro = ejecutar_automatizacion(
+            entrada=entrada_automatizacion,
             max_filas=args.max_filas_automatizacion,
             tam_lote=args.tam_lote_automatizacion,
             carpeta_ejecuciones=args.carpeta_ejecuciones,
             carpeta_respaldos=args.carpeta_respaldos,
         )
-    if args.proceso == "visualizar":
+        if args.proceso == "completo" and registro_visualizacion is None:
+            # Visualizar esta corrida, sin depender de la búsqueda de la última.
+            registro_visualizacion = (
+                Path(args.carpeta_ejecuciones)
+                / registro["identificador_ejecucion"] / "registro.json"
+            )
+    if args.proceso == "visualizar" or (args.proceso == "completo" and not args.modo_rapido):
         from src.visualizacion import generar_visualizacion
-        generar_visualizacion(registro=args.registro_visualizacion,
+        generar_visualizacion(registro=registro_visualizacion,
                               carpeta_ejecuciones=args.carpeta_ejecuciones)
+
+    if args.proceso == "completo" and args.modo_rapido:
+        print("Modo rápido: se omiten evaluación, SHAP, automatización y visualización.")
+
+    # Auditorías y experimentos adicionales: se solicitan individualmente.
+    if args.proceso == "optimizar":
+        from src.optimizacion import optimizar
+        optimizar(max_filas=args.max_filas_opt, iteraciones=args.iteraciones_opt, semilla=args.semilla)
     if args.proceso == "batch":
         from src.batch import ejecutar_pruebas_batch
         ejecutar_pruebas_batch(
@@ -139,12 +168,7 @@ def ejecutar() -> None:
     if args.proceso == "validacion-negocio":
         from src.validacion_negocio import validar_negocio
         validar_negocio(capacidad_alertas_dia=args.capacidad_alertas_dia)
-    if args.proceso == "evaluar" or (args.proceso == "completo" and not args.modo_rapido):
-        from src.evaluacion import evaluar
-        evaluar()
-    if args.proceso == "explicar" or (args.proceso == "completo" and not args.modo_rapido):
-        from src.explicabilidad import explicar
-        explicar(muestra=args.muestra_shap, semilla=args.semilla)
+
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ Todo el trabajo usa **datos sintéticos**: no hay conexión a datos productivos,
 
 `dashboard/index.html` es una página autocontenida (sin servidor ni librerías externas). Se abre con doble clic o desde GitHub Pages.
 
-- **Alertas:** botón «Cargar archivo JSON» con `output/resultados/visualizacion/h6_t2_indicadores.json` (lo genera `python main.py --proceso visualizar`). Actualiza indicadores, distribución por prioridad y escenarios de umbral. Un JSON inválido se rechaza con un mensaje y no cambia la pantalla.
+- **Alertas:** botón «Cargar archivo JSON» con `output/resultados/visualizacion/h6_t2_indicadores.json` (lo genera `python main.py --proceso completo` o, si ya existe una corrida, `python main.py --proceso visualizar`). Actualiza indicadores, distribución por prioridad y escenarios de umbral. Un JSON inválido se rechaza con un mensaje y no cambia la pantalla.
 - **Seguimiento del backlog:** el mismo botón acepta `seguimiento.json` (formato con lista `tareas`). Muestra tareas completadas / en proceso, avance por fase CRISP-DM y la tabla de las 24 tareas.
 - Ejemplos para probar la carga en `dashboard/ejemplos/` (el escenario 02 es ficticio, solo demostración).
 - Lectura local en el navegador: ningún archivo se envía a Internet.
@@ -28,7 +28,7 @@ El script genera `dashboard/ejemplos/03_seguimiento_backlog.json` y actualiza lo
 
 ## Reproducción desde cero
 
-El repositorio no incluye los CSV ni el modelo entrenado (`models/*.joblib`): se generan con los pasos siguientes. El dashboard sí viene listo en `dashboard/index.html` con datos de ejemplo incrustados, así que los pasos 2 a 4 solo son necesarios para regenerar las alertas desde el pipeline.
+El repositorio no incluye los CSV ni el modelo entrenado (`models/*.joblib`): se generan con los pasos siguientes. El dashboard sí viene listo en `dashboard/index.html` con datos de ejemplo incrustados, así que solo necesitas ejecutar el paso 2 para regenerar las alertas y los indicadores desde el pipeline. Los pasos 3 y 4 permiten repetir esas etapas por separado; no son necesarios después de un `completo` exitoso.
 
 ### Prerrequisitos
 
@@ -51,15 +51,27 @@ python -m pip install -r requirements.txt
 python -m pytest -q                # 42 pruebas
 ```
 
-### 2. Generar datos y entrenar el modelo
+### 2. Ejecutar el flujo completo, incluido el respaldo y la visualización
 
 ```bash
-python main.py --proceso completo  # generar, preparar, entrenar, evaluar y explicar
+python main.py --proceso completo
 ```
 
-Produce `data/raw/`, `data/processed/`, el modelo oficial `models/modelo_logismart.joblib` y `output/resultados/modelado/resultados_modelado.json`. Es el atajo de los cinco primeros comandos de «Ejecución uno a uno».
+Ejecuta en orden: **generar → preparar → entrenar → evaluar → explicar (SHAP) → automatizar → visualizar**. Si una etapa falla, la ejecución se detiene y no continúa con las siguientes.
 
-Para llegar solo al dashboard no hacen falta `evaluar` ni `explicar`. Basta con:
+Produce:
+
+- Los CSV de `data/raw/` y `data/processed/`.
+- El modelo `models/modelo_logismart.joblib`, el resumen `output/resultados/modelado/resultados_modelado.json` y los resultados de evaluación y SHAP.
+- Las predicciones y la bitácora en `output/ejecuciones/<id_de_corrida>/`.
+- Un respaldo ZIP local verificado en `output/respaldos/`.
+- Los indicadores JSON/CSV/PNG y el panel HTML descritos en el paso 4.
+
+La visualización usa el registro de la corrida recién generada, salvo que indiques otro con `--registro-visualizacion`. Al finalizar correctamente, pasa directamente al paso 5 para abrir el dashboard. El seguimiento de GitHub Projects se actualiza por separado, con los comandos de la sección de backlog.
+
+Si usas `--salida` para cambiar la ruta del CSV, `completo` utiliza ese mismo archivo en la automatización. Puedes indicar otra entrada con `--entrada-automatizacion`.
+
+Para llegar solo al dashboard no hacen falta `evaluar` ni `explicar`. Ejecuta esta alternativa y luego los pasos 3 y 4:
 
 ```bash
 python main.py --proceso generar
@@ -67,7 +79,7 @@ python main.py --proceso preparar
 python main.py --proceso entrenar
 ```
 
-### 3. Inferencia por lotes y respaldo
+### 3. Inferencia por lotes y respaldo (opcional si ya ejecutaste completo)
 
 ```bash
 python main.py --proceso automatizar
@@ -77,13 +89,13 @@ Guarda `predicciones.csv` y `registro.json` en `output/ejecuciones/<id_de_corrid
 
 Cada ejecución crea una carpeta con un identificador nuevo (fecha, hora y sufijo aleatorio), por lo que su nombre no coincidirá con el citado en el notebook. Para verificar la reproducción compara el número de alertas (161.875 de 1.050.000 operaciones) y el SHA-256 de `predicciones.csv` (campo `sha256_predicciones` de `registro.json`), no el nombre de la carpeta.
 
-### 4. Indicadores del dashboard
+### 4. Indicadores del dashboard (opcional si ya ejecutaste completo)
 
 ```bash
 python main.py --proceso visualizar
 ```
 
-Lee la última corrida y genera `output/resultados/visualizacion/h6_t2_indicadores.json` (más CSV y PNG) y el panel `output/visualizacion/panel_h6_t2.html`. Falla si antes no se ejecutó el paso 3.
+Ejecutado individualmente, lee la última corrida exitosa (o la indicada con `--registro-visualizacion`) y genera `output/resultados/visualizacion/h6_t2_indicadores.json` (más CSV y PNG) y el panel `output/visualizacion/panel_h6_t2.html`. Requiere una corrida exitosa de `automatizar`, ejecutada individualmente o dentro de `completo`.
 
 ### 5. Abrir el dashboard
 
@@ -91,7 +103,7 @@ Abre `dashboard/index.html` con doble clic, pulsa «Cargar archivo JSON» y sele
 
 ### Ejecución uno a uno (todas las evidencias)
 
-`completo` equivale a los cinco primeros comandos de la lista. Para reproducir además todas las evidencias del notebook `notebooks/02_Modelado_LogiSmart.ipynb` (que solo lee resultados ya generados), ejecuta los procesos en este orden, que respeta las dependencias del código y sigue el del backlog (H4-T3 a H6-T2):
+`completo` incluye `generar`, `preparar`, `entrenar`, `evaluar`, `explicar`, `automatizar` y `visualizar`, en ese orden. No incluye `optimizar`, `sesgos`, `evaluacion-final`, `batch`, `equidad` ni `validacion-negocio`; estos procesos se solicitan individualmente. Para reproducir todas las evidencias del notebook `notebooks/02_Modelado_LogiSmart.ipynb` (que solo lee resultados ya generados), ejecuta los procesos en este orden, que respeta las dependencias del código y sigue el del backlog (H4-T3 a H6-T2):
 
 ```bash
 python main.py --proceso generar
@@ -109,6 +121,8 @@ python main.py --proceso automatizar          # H6-T1
 python main.py --proceso visualizar           # H6-T2 (después de automatizar)
 ```
 
+La lista anterior es una alternativa desde cero a `completo`, no una secuencia que debas repetir después de él. Si ya ejecutaste `completo` correctamente, solo faltan los seis procesos adicionales indicados arriba para completar esta lista de evidencias.
+
 Qué necesita cada proceso antes de ejecutarse:
 
 | Proceso | Requiere |
@@ -122,7 +136,7 @@ Qué necesita cada proceso antes de ejecutarse:
 | `automatizar` | `generar` y `entrenar` |
 | `visualizar` | `automatizar` |
 
-No uses `--modo-rapido` para reproducir resultados: limita el entrenamiento y omite `evaluar` y `explicar` en `completo`; además, `automatizar`, `batch`, `evaluar`, `explicar` y `evaluacion-final` rechazan un modelo entrenado en ese modo. Tampoco cambies `--registros` si quieres obtener las cifras del informe.
+No uses `--modo-rapido` para reproducir resultados: limita el entrenamiento y, en `completo`, solo ejecuta `generar`, `preparar` y `entrenar`: omite evaluación, SHAP, automatización y visualización; además, `automatizar`, `batch`, `evaluar`, `explicar` y `evaluacion-final` rechazan un modelo entrenado en ese modo. Tampoco cambies `--registros` si quieres obtener las cifras del informe.
 
 ### Reproducibilidad
 
@@ -145,7 +159,9 @@ Procesos disponibles con `python main.py --proceso <nombre>`:
 | `batch` | Pruebas de inferencia por lotes (tiempo y memoria) |
 | `automatizar` | Preparación + inferencia por lotes + respaldo ZIP verificable |
 | `visualizar` | Genera los indicadores JSON/CSV/PNG de la última corrida |
-| `completo` | Generar, preparar, entrenar, evaluar y explicar |
+| `completo` | Generar → preparar → entrenar → evaluar → explicar → automatizar con respaldo → visualizar |
+
+Sin argumentos, `python main.py` sigue ejecutando únicamente `generar`.
 
 Prueba rápida: `python main.py --registros 1000 --salida data/prueba.csv`. Los CSV grandes se generan localmente y no se versionan.
 
